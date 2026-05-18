@@ -120,7 +120,7 @@ export const FindExperts = () => {
     <main className="flex-grow pt-16 bg-surface px-lg py-xl">
       <div className="max-w-container-max mx-auto flex flex-col gap-xl">
         <div className="flex flex-col gap-md text-center max-w-3xl mx-auto">
-          <h1 className="font-h1 text-h1 text-on-surface">Find the Right Expert for Your Farm</h1>
+          <h1 className="font-h1 text-h1 text-on-surface">Find the Right Expert for Your Project</h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">Browse our network of verified agricultural specialists and book a 1-on-1 video consultation to get tailored advice.</p>
         </div>
 
