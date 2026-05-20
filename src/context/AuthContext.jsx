@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
     return true;
   };
 
-  const signup = async (name, email, password, role = 'student') => {
+  const signup = async (name, email, password, role = 'student', autoLogin = true) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -122,7 +122,13 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.message || 'Error signing up.');
       return false;
     }
-    toast.success('Account created successfully!');
+    
+    if (!autoLogin) {
+      await supabase.auth.signOut();
+      setUser(null);
+    } else {
+      toast.success('Account created successfully!');
+    }
     return true;
   };
 

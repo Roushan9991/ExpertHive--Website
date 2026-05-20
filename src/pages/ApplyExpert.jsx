@@ -72,7 +72,7 @@ export const ApplyExpert = () => {
       return;
     }
 
-    const signupSuccess = await signup(formData.name, email, password, 'expert');
+    const signupSuccess = await signup(formData.name, email, password, 'expert', false);
     if (!signupSuccess) {
       setSubmitting(false);
       return;
