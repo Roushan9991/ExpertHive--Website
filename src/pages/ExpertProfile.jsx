@@ -213,7 +213,7 @@ export const ExpertProfile = () => {
                 <div>
                   <h2 className="font-h3 text-h3 text-on-surface flex items-center gap-2"><MessageCircle className="w-5 h-5" /> Available slots</h2>
                   <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {expert.availableSlots?.length ? expert.availableSlots.map((slot) => (
+                    {(expert.availableSlots || expert.available_slots)?.length ? (expert.availableSlots || expert.available_slots).map((slot) => (
                       <span key={slot} className="font-label-sm text-on-surface bg-surface-container-lowest border border-outline-variant rounded-full px-3 py-2 text-center">{slot}</span>
                     )) : (
                       <span className="font-body-md text-on-surface-variant">No slots available yet.</span>
