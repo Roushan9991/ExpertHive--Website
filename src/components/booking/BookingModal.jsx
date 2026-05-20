@@ -90,7 +90,7 @@ export const BookingModal = ({ expert, onClose, onProceedToPayment }) => {
               <Clock className="w-4 h-4 text-primary" /> Select Time Slot
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {expert.availableSlots.map(slot => (
+              {(expert.availableSlots || expert.available_slots || []).map(slot => (
                 <button
                   key={slot}
                   onClick={() => setSelectedSlot(slot)}
@@ -103,6 +103,9 @@ export const BookingModal = ({ expert, onClose, onProceedToPayment }) => {
                   {slot}
                 </button>
               ))}
+              {!(expert.availableSlots || expert.available_slots)?.length && (
+                <p className="col-span-3 text-center text-on-surface-variant font-caption py-4">No slots available</p>
+              )}
             </div>
           </div>
 

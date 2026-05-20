@@ -42,6 +42,7 @@ export const submitExpertApplicationWithoutLogin = async (application, email, pa
     location: application.location,
     languages: [], // Default empty or map if added
     image_url: application.imageFile || '',
+    available_slots: application.availableSlots || [],
     status: 'pending'
   };
 
@@ -72,6 +73,7 @@ export const saveExpertApplication = async (application) => {
     location: application.location,
     languages: [], // Default empty or map if added
     image_url: application.imageFile || '',
+    available_slots: application.availableSlots || [],
     status: 'pending'
   };
   const { error } = await supabase.from('experts').insert([expertData]);
