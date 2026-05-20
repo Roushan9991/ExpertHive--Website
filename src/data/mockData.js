@@ -1,5 +1,58 @@
 import { supabase } from '../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
+export const submitExpertApplicationWithoutLogin = async (application, email, password) => {
+  // Create a temporary client that DOES NOT save the session to localStorage
+  const tempSupabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co',
+    import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder_key',
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    }
+  );
+
+  // 1. Sign up the user (session is only kept in memory for this temp client)
+  const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: application.name,
+        role: 'expert'
+      }
+    }
+  });
+
+  if (authError) {
+    return { success: false, error: authError.message };
+  }
+
+  // 2. Insert the application using the temp client (authenticated as the new user)
+  const expertData = {
+    owner_id: authData.user?.id,
+    owner_email: email,
+    name: application.name,
+    specialization: application.specialization,
+    experience: application.experience,
+    fee: application.fee,
+    description: application.description,
+    location: application.location,
+    languages: [], // Default empty or map if added
+    image_url: application.imageFile || '',
+    status: 'pending'
+  };
+
+  const { error: insertError } = await tempSupabase.from('experts').insert([expertData]);
+  
+  if (insertError) {
+    return { success: false, error: insertError.message };
+  }
+
+  return { success: true };
+};
 // Expert Applications
 export const getAllExpertApplications = async () => {
   const { data } = await supabase.from('experts').select('*');

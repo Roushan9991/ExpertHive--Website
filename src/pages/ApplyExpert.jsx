@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { saveExpertToSheet } from '../api/sheetsApi';
-import { EXPERT_APPLICATION_FIELDS, saveExpertApplication, findUserByEmail } from '../data/mockData';
+import { EXPERT_APPLICATION_FIELDS, submitExpertApplicationWithoutLogin, findUserByEmail } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 
 export const ApplyExpert = () => {
-  const { signup } = useAuth();
   const [formData, setFormData] = useState(
     EXPERT_APPLICATION_FIELDS.reduce((acc, field) => {
       acc[field.name] = field.default || (field.type === 'multiselect' ? [] : '');
@@ -72,12 +71,6 @@ export const ApplyExpert = () => {
       return;
     }
 
-    const signupSuccess = await signup(formData.name, email, password, 'expert', false);
-    if (!signupSuccess) {
-      setSubmitting(false);
-      return;
-    }
-
     const application = {
       ...formData,
       expertEmail: email,
@@ -85,8 +78,14 @@ export const ApplyExpert = () => {
       imageFile: formData.imageFile,
     };
 
-    await saveExpertApplication(application);
-    // saveExpertToSheet(application);
+    const result = await submitExpertApplicationWithoutLogin(application, email, password);
+    
+    if (!result.success) {
+      toast.error(result.error || 'Failed to submit application.');
+      setSubmitting(false);
+      return;
+    }
+    
     setSubmitted(true);
     setSubmitting(false);
     toast.success('Thanks for applying! Your profile is now pending admin approval.');
