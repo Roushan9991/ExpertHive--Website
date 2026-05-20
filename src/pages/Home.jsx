@@ -2,23 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Verified, Sprout, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getAllExperts, getExpertRating, loadReviews } from '../data/mockData';
+import { getPlatformStats } from '../data/mockData';
 
 export const Home = () => {
-  const [experts, setExperts] = useState([]);
+  const [stats, setStats] = useState({ totalExperts: 0, totalConsultations: 0, averageRating: '0.0' });
 
   useEffect(() => {
-    setExperts(getAllExperts());
+    getPlatformStats().then(setStats);
   }, []);
-
-  const totalExperts = experts.length;
-  const totalConsultations = loadReviews().length;
-  const averageRating = experts.length > 0
-    ? (experts.reduce((sum, expert) => {
-        const rating = getExpertRating(expert.id).average || expert.rating || 0;
-        return sum + rating;
-      }, 0) / experts.length).toFixed(1)
-    : '0.0';
   return (
     <main className="flex-grow pt-16">
       {/* Hero Section */}
@@ -57,17 +48,17 @@ export const Home = () => {
 
             {/* Quick Stats Bento */}
             <div className="grid grid-cols-3 gap-sm mt-8 p-md bg-surface/80 backdrop-blur-md rounded-xl border border-outline-variant shadow-sm">
-              <div className="flex flex-col">
-                <span className="font-h3 text-h3 text-primary">{totalExperts}+</span>
-                <span className="font-caption text-caption text-on-surface-variant">Verified Experts</span>
+              <div className="flex flex-col border-r border-outline-variant pr-6">
+                <span className="font-h2 text-h2 text-primary">{stats.totalExperts}+</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Verified Experts</span>
               </div>
-              <div className="flex flex-col border-l border-outline-variant pl-sm">
-                <span className="font-h3 text-h3 text-primary">{totalConsultations}+</span>
-                <span className="font-caption text-caption text-on-surface-variant">Consultations</span>
+              <div className="flex flex-col border-r border-outline-variant pr-6 pl-2">
+                <span className="font-h2 text-h2 text-primary">{stats.totalConsultations}+</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Consultations</span>
               </div>
-              <div className="flex flex-col border-l border-outline-variant pl-sm">
-                <span className="font-h3 text-h3 text-primary">{averageRating}/5</span>
-                <span className="font-caption text-caption text-on-surface-variant">Average Rating</span>
+              <div className="flex flex-col pl-2">
+                <span className="font-h2 text-h2 text-primary">{stats.averageRating}/5</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Average Rating</span>
               </div>
             </div>
           </motion.div>

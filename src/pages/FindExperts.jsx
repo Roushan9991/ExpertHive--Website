@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SearchBar } from '../components/experts/SearchBar';
 import { ExpertCard } from '../components/experts/ExpertCard';
 import { BookingModal } from '../components/booking/BookingModal';
@@ -14,7 +14,11 @@ export const FindExperts = () => {
   const [problemStatement, setProblemStatement] = useState('');
   const [selectedExpert, setSelectedExpert] = useState(null);
   const [bookingDetails, setBookingDetails] = useState(null);
-  const [savedExperts] = useState(() => getAllExperts());
+  const [savedExperts, setSavedExperts] = useState([]);
+
+  useEffect(() => {
+    getAllExperts().then(setSavedExperts);
+  }, []);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -37,7 +41,7 @@ export const FindExperts = () => {
     const fields = [expert.specialization, expert.description, expert.name];
     for (const kw of keywords) {
       for (const field of fields) {
-        if (field && field.toLowerCase().includes(kw)) score++;
+        if (field && String(field).toLowerCase().includes(kw)) score++;
       }
     }
     return score;
@@ -65,7 +69,7 @@ export const FindExperts = () => {
       // Parse experience as number of years
       const getYears = exp => {
         if (!exp) return 0;
-        const match = exp.match(/(\d+)/);
+        const match = String(exp).match(/(\d+)/);
         return match ? parseInt(match[1], 10) : 0;
       };
       return getYears(b.experience) - getYears(a.experience);

@@ -12,54 +12,60 @@ export const AdminDashboard = () => {
   const { user } = useAuth();
   const [applications, setApplications] = useState([]);
   const [deleteRequests, setDeleteRequests] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [editingExpert, setEditingExpert] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [viewingExpert, setViewingExpert] = useState(null);
 
+  const loadData = async () => {
+    setApplications(await getAllExpertApplications());
+    setDeleteRequests(await getPendingDeleteRequests());
+    setBookings(await loadBookings());
+  };
+
   useEffect(() => {
-    setApplications(getAllExpertApplications());
-    setDeleteRequests(getPendingDeleteRequests());
+    loadData();
   }, []);
 
   if (!user || user.role !== 'admin') {
     return <Navigate to="/login" replace />;
   }
 
-  const handleDeleteExpert = (expertId, expertEmail) => {
+  const handleDeleteExpert = async (expertId, expertEmail) => {
     if (window.confirm('Are you sure you want to delete this expert profile?')) {
-      deleteExpertApplication(expertId);
-      deleteUserByEmail(expertEmail);
+      await deleteExpertApplication(expertId);
+      await deleteUserByEmail(expertEmail);
       updateExpertStatusInSheet(expertId, {
         status: 'deleted',
         deletedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
       });
-      setApplications(getAllExpertApplications());
+      loadData();
       toast.success('Expert deleted successfully!');
     }
   };
 
-  const handleApproveExpert = (expertId) => {
-    approveExpertApplication(expertId);
+  const handleApproveExpert = async (expertId) => {
+    await approveExpertApplication(expertId);
     updateExpertStatusInSheet(expertId, {
       status: 'approved',
       approvedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
     });
-    setApplications(getAllExpertApplications());
+    loadData();
     toast.success('Expert application approved. The expert is now visible in Find Experts.');
   };
 
-  const handleRejectExpert = (expertId, expertEmail) => {
+  const handleRejectExpert = async (expertId, expertEmail) => {
     if (window.confirm('Reject this expert application and delete the profile?')) {
-      rejectExpertApplication(expertId);
-      deleteUserByEmail(expertEmail);
+      await rejectExpertApplication(expertId);
+      await deleteUserByEmail(expertEmail);
       updateExpertStatusInSheet(expertId, {
         status: 'rejected',
         rejectedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
       });
-      setApplications(getAllExpertApplications());
+      loadData();
       toast.success('Expert application rejected and removed.');
     }
   };
@@ -74,10 +80,10 @@ export const AdminDashboard = () => {
 
   const handleEditChange = (event) => {
     const { name, value, type, files } = event.target;
-    if (name === 'imageUrl' && type === 'file' && files?.[0]) {
+    if (name === 'image_url' && type === 'file' && files?.[0]) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setEditForm((prev) => ({ ...prev, imageUrl: e.target.result }));
+        setEditForm((prev) => ({ ...prev, image_url: e.target.result }));
       };
       reader.readAsDataURL(files[0]);
       return;
@@ -97,36 +103,35 @@ export const AdminDashboard = () => {
     });
   };
 
-  const handleSaveEdit = (event) => {
+  const handleSaveEdit = async (event) => {
     event.preventDefault();
-    updateExpertApplication(editForm);
+    await updateExpertApplication(editForm);
     updateExpertInSheet({
       ...editForm,
       lastUpdated: new Date().toISOString(),
     });
-    setApplications(getAllExpertApplications());
     setEditingExpert(null);
+    loadData();
     toast.success('Expert profile updated successfully!');
   };
 
-  const handleApproveDeleteRequest = (requestId, expertId) => {
-    approveDeleteRequest(requestId);
+  const handleApproveDeleteRequest = async (requestId, expertId) => {
+    await approveDeleteRequest(requestId);
     updateExpertStatusInSheet(expertId, {
       status: 'deleted',
       deletedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
     });
-    setDeleteRequests(getPendingDeleteRequests());
+    loadData();
     toast.success('Account deletion request approved. Expert account has been deleted.');
   };
 
-  const handleRejectDeleteRequest = (requestId) => {
-    rejectDeleteRequest(requestId);
-    setDeleteRequests(getPendingDeleteRequests());
+  const handleRejectDeleteRequest = async (requestId) => {
+    await rejectDeleteRequest(requestId);
+    loadData();
     toast.success('Account deletion request rejected.');
   };
 
-  const bookings = loadBookings();
   const revenue = bookings.reduce((sum, consultation) => sum + (consultation.amount || 0), 0);
 
   // Process revenue data day-wise
@@ -270,7 +275,7 @@ export const AdminDashboard = () => {
                 {applications.map((expert) => (
                   <tr key={expert.id} className="border-b border-outline-variant hover:bg-surface/50 transition-colors">
                     <td className="p-4 flex items-center gap-3">
-                      <img src={expert.imageUrl} alt={expert.name} className="w-8 h-8 rounded-full object-cover" />
+                      <img src={expert.image_url} alt={expert.name} className="w-8 h-8 rounded-full object-cover" />
                       <span className="font-body-md text-on-surface font-medium">{expert.name}</span>
                     </td>
                     <td className="p-4 font-body-md text-on-surface-variant">{expert.specialization}</td>
@@ -395,8 +400,8 @@ export const AdminDashboard = () => {
               </div>
 
               <div className="flex flex-col md:flex-row gap-6 mb-8">
-                {viewingExpert.imageUrl ? (
-                  <img src={viewingExpert.imageUrl} alt={viewingExpert.name} className="w-32 h-32 rounded-2xl object-cover border border-outline-variant shrink-0" />
+                {viewingExpert.image_url ? (
+                  <img src={viewingExpert.image_url} alt={viewingExpert.name} className="w-32 h-32 rounded-2xl object-cover border border-outline-variant shrink-0" />
                 ) : (
                   <div className="w-32 h-32 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">No Image</div>
                 )}
@@ -544,14 +549,14 @@ export const AdminDashboard = () => {
                 <label className="flex flex-col gap-2 text-on-surface lg:col-span-2">
                   <span className="font-label-md text-label-md">Profile Image</span>
                   <input
-                    name="imageUrl"
+                    name="image_url"
                     type="file"
                     accept="image/*"
                     onChange={handleEditChange}
                     className="rounded-2xl border border-outline-variant bg-surface px-4 py-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1 file:text-sm file:text-on-primary"
                   />
-                  {editForm.imageUrl && (
-                    <img src={editForm.imageUrl} alt="Preview" className="w-24 h-24 rounded-lg object-cover border border-outline-variant mt-2" />
+                  {editForm.image_url && (
+                    <img src={editForm.image_url} alt="Preview" className="w-24 h-24 rounded-lg object-cover border border-outline-variant mt-2" />
                   )}
                 </label>
                 <div className="lg:col-span-2">

@@ -50,8 +50,14 @@ export const Navbar = () => {
 
         {user ? (
           <div className="hidden sm:flex items-center gap-sm">
-            <span className="font-label-md text-on-surface-variant">Hi, {user.name}</span>
-            <button onClick={logout} className="font-label-md text-label-md text-error bg-error-container hover:bg-[#ffd0cb] transition-colors px-4 py-2 rounded-lg">Logout</button>
+            <Link to="/profile" className="font-label-md text-on-surface hover:text-primary hover:underline cursor-pointer">
+              Hi, {user.name}
+            </Link>
+            <button onClick={() => {
+              if (window.confirm('Are you sure you want to logout?')) {
+                logout();
+              }
+            }} className="font-label-md text-label-md text-error bg-error-container hover:bg-[#ffd0cb] transition-colors px-4 py-2 rounded-lg">Logout</button>
           </div>
         ) : (
           <button onClick={() => navigate('/login')} className="font-label-md text-label-md text-primary bg-secondary-container hover:bg-secondary-fixed transition-colors px-4 py-2 rounded-lg hidden sm:block">Login/Register</button>
@@ -77,7 +83,12 @@ export const Navbar = () => {
             )}
             <div className="py-4 flex justify-center">
               {user ? (
-                <button onClick={() => { logout(); toggleMenu(); }} className="w-full font-label-md text-error bg-error-container px-4 py-2 rounded-lg">Logout</button>
+                <button onClick={() => {
+                  if (window.confirm('Are you sure you want to logout?')) {
+                    logout();
+                    toggleMenu();
+                  }
+                }} className="w-full font-label-md text-error bg-error-container px-4 py-2 rounded-lg">Logout</button>
               ) : (
                 <button onClick={() => { navigate('/login'); toggleMenu(); }} className="w-full font-label-md text-primary bg-secondary-container px-4 py-2 rounded-lg">Login/Register</button>
               )}

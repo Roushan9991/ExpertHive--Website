@@ -46,7 +46,7 @@ export const BookingModal = ({ expert, onClose, onProceedToPayment }) => {
         <div className="p-6 flex flex-col gap-6 overflow-y-auto max-h-[70vh]">
           {/* Expert Summary */}
           <div className="flex items-center gap-4 bg-surface-container p-4 rounded-xl">
-            <img src={expert.imageUrl} alt={expert.name} className="w-12 h-12 rounded-full object-cover" />
+            <img src={expert.image_url} alt={expert.name} className="w-12 h-12 rounded-full object-cover" />
             <div>
               <h4 className="font-label-md font-bold text-on-surface">{expert.name}</h4>
               <p className="font-caption text-on-surface-variant">{expert.specialization}</p>

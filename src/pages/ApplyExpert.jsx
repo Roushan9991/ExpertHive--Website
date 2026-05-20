@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { saveExpertToSheet } from '../api/sheetsApi';
-import { EXPERT_APPLICATION_FIELDS, saveExpertApplication, findUserByEmail, saveUser } from '../data/mockData';
+import { EXPERT_APPLICATION_FIELDS, saveExpertApplication, findUserByEmail } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 
 export const ApplyExpert = () => {
+  const { signup } = useAuth();
   const [formData, setFormData] = useState(
     EXPERT_APPLICATION_FIELDS.reduce((acc, field) => {
       acc[field.name] = field.default || (field.type === 'multiselect' ? [] : '');
@@ -46,7 +48,7 @@ export const ApplyExpert = () => {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const email = formData.expertEmail.trim().toLowerCase();
@@ -57,42 +59,34 @@ export const ApplyExpert = () => {
       return;
     }
 
-    const existingUser = findUserByEmail(email);
+    setSubmitting(true);
+
+    const existingUser = await findUserByEmail(email);
     if (existingUser) {
       if (existingUser.role === 'expert') {
         toast.error('This email is already registered as an expert. Please login with your expert credentials.');
       } else {
         toast.error('This email is already registered. Please login or use another email.');
       }
+      setSubmitting(false);
       return;
     }
 
-    setSubmitting(true);
-
-    saveUser({
-      id: `user_${Date.now()}`,
-      name: formData.name,
-      email,
-      password,
-      role: 'expert',
-    });
+    const signupSuccess = await signup(formData.name, email, password, 'expert');
+    if (!signupSuccess) {
+      setSubmitting(false);
+      return;
+    }
 
     const application = {
       ...formData,
-      id: `exp_${Date.now()}`,
-      ownerEmail: email,
       expertEmail: email,
-      status: 'pending',
-      rating: 0,
-      reviews: 0,
       fee: Number(formData.fee || 0),
-      imageUrl: formData.imageFile,
-      createdAt: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
+      imageFile: formData.imageFile,
     };
 
-    saveExpertApplication(application);
-    saveExpertToSheet(application);
+    await saveExpertApplication(application);
+    // saveExpertToSheet(application);
     setSubmitted(true);
     setSubmitting(false);
     toast.success('Thanks for applying! Your profile is now pending admin approval.');

@@ -1,314 +1,199 @@
+import { supabase } from '../lib/supabase';
+
+// Expert Applications
+export const getAllExpertApplications = async () => {
+  const { data } = await supabase.from('experts').select('*');
+  return data || [];
+};
+
+export const saveExpertApplication = async (application) => {
+  // Convert application format to Supabase schema
+  const expertData = {
+    owner_id: (await supabase.auth.getUser()).data.user?.id,
+    owner_email: application.expertEmail,
+    name: application.name,
+    specialization: application.specialization,
+    experience: application.experience,
+    fee: application.fee,
+    description: application.description,
+    location: application.location,
+    languages: [], // Default empty or map if added
+    image_url: application.imageFile || '',
+    status: 'pending'
+  };
+  const { error } = await supabase.from('experts').insert([expertData]);
+  if (error) console.error(error);
+};
+
+export const deleteExpertApplication = async (expertId) => {
+  await supabase.from('experts').update({ status: 'deleted' }).eq('id', expertId);
+};
+
+export const updateExpertApplication = async (updatedExpert) => {
+  const { error } = await supabase.from('experts').update(updatedExpert).eq('id', updatedExpert.id);
+  if (error) {
+    console.error(error);
+    return false;
+  }
+  return true;
+};
+
+export const getAllExperts = async () => {
+  const { data } = await supabase.from('experts').select('*').eq('status', 'approved');
+  return data || [];
+};
+
+export const getPendingExpertApplications = async () => {
+  const { data } = await supabase.from('experts').select('*').eq('status', 'pending');
+  return data || [];
+};
+
+export const getPlatformStats = async () => {
+  try {
+    const { count: expertsCount } = await supabase.from('experts').select('*', { count: 'exact', head: true }).eq('status', 'approved');
+    const { count: bookingsCount } = await supabase.from('bookings').select('*', { count: 'exact', head: true });
+    const { data: expertsData } = await supabase.from('experts').select('rating').eq('status', 'approved');
+    
+    let avgRating = 0;
+    if (expertsData && expertsData.length > 0) {
+      const sum = expertsData.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0);
+      avgRating = sum / expertsData.length;
+    }
+    
+    return {
+      totalExperts: expertsCount || 0,
+      totalConsultations: bookingsCount || 0,
+      averageRating: avgRating > 0 ? avgRating.toFixed(1) : '0.0'
+    };
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    return { totalExperts: 0, totalConsultations: 0, averageRating: '0.0' };
+  }
+};
+
+export const getExpertApplicationById = async (expertId) => {
+  const { data } = await supabase.from('experts').select('*').eq('id', expertId).single();
+  return data;
+};
+
+export const getExpertById = async (expertId) => {
+  const { data } = await supabase.from('experts').select('*').eq('id', expertId).eq('status', 'approved').single();
+  return data;
+};
+
+export const getExpertByOwnerEmail = async (email) => {
+  const { data, error } = await supabase.from('experts').select('*').eq('owner_email', email).single();
+  if (error) {
+    console.error("Error fetching expert by email:", error);
+    return null;
+  }
+  return data;
+};
+
+export const approveExpertApplication = async (expertId) => {
+  await supabase.from('experts').update({ status: 'approved' }).eq('id', expertId);
+};
+
+export const rejectExpertApplication = async (expertId) => {
+  await supabase.from('experts').update({ status: 'rejected' }).eq('id', expertId);
+};
+
+
+// Users
+export const findUserByEmail = async (email) => {
+  // Note: Only admins or service role can search emails globally in auth.users,
+  // so we check the public.profiles table instead.
+  const { data } = await supabase.from('profiles').select('*').eq('email', email).single();
+  return data;
+};
+
+export const deleteUserByEmail = async (email) => {
+  console.log('User deletion from frontend disabled for Supabase');
+};
+
+// Bookings
+export const loadBookings = async () => {
+  const { data } = await supabase.from('bookings').select('*');
+  return data || [];
+};
+
+export const saveBooking = async (booking) => {
+  const { error } = await supabase.from('bookings').insert([{
+    expert_id: booking.expertId,
+    student_id: (await supabase.auth.getUser()).data.user?.id,
+    expert_name: booking.expertName,
+    expert_email: booking.expertEmail,
+    student_name: booking.studentName,
+    student_email: booking.studentEmail,
+    date: booking.date,
+    time: booking.time,
+    notes: booking.notes,
+    amount: booking.amount,
+    status: booking.status,
+    zoom_link: booking.zoomLink
+  }]);
+  if (error) console.error(error);
+};
+
+export const updateBooking = async (updatedBooking) => {
+  await supabase.from('bookings').update(updatedBooking).eq('id', updatedBooking.id);
+};
+
+export const getBookingsByStudent = async (studentEmail) => {
+  const { data } = await supabase.from('bookings').select('*').eq('student_email', studentEmail);
+  return data || [];
+};
+
+export const getBookingsByExpert = async ({ expertId, expertEmail }) => {
+  const { data } = await supabase.from('bookings').select('*').eq('expert_email', expertEmail);
+  return data || [];
+};
+
+export const loadReviews = async () => { return []; };
+export const saveReview = async (review) => {};
+export const getReviewsByExpert = async (expertId) => { return []; };
+export const hasUserReviewedExpert = async (expertId, studentEmail) => { return false; };
+export const getExpertRating = async (expertId) => { return { average: 0, count: 0 }; };
+
+// Delete Requests
+export const loadDeleteRequests = async () => [];
+export const createDeleteRequest = async () => {};
+export const getPendingDeleteRequests = async () => [];
+export const approveDeleteRequest = async () => {};
+export const rejectDeleteRequest = async () => {};
+export const getDeleteRequestByExpertId = async () => null;
+
 export const EXPERT_APPLICATION_FIELDS = [
-  {
-    name: 'name',
-    label: 'Expert Name',
-    type: 'text',
-    placeholder: 'Dr. Anil Kumar',
-    required: true,
-  },
-  {
-    name: 'specialization',
-    label: 'Specialization',
-    type: 'text',
-    placeholder: 'Paddy Expert / Organic Farming',
-    required: true,
-  },
-  {
-    name: 'experience',
-    label: 'Experience',
-    type: 'text',
-    placeholder: '10 Years',
-    required: true,
-  },
-  {
-    name: 'fee',
-    label: 'Consultation Fee (₹)',
-    type: 'number',
-    placeholder: '400',
-    required: true,
-  },
-  {
-    name: 'imageFile',
-    label: 'Profile Image',
-    type: 'file',
-    accept: 'image/*',
-    required: true,
-  },
-  {
-    name: 'description',
-    label: 'Profile Description',
-    type: 'textarea',
-    placeholder: 'Expert in modern irrigation and soil health management.',
-    required: true,
-  },
-  {
-    name: 'location',
-    label: 'Location',
-    type: 'text',
-    placeholder: 'Madhya Pradesh, India',
-    required: true,
-  },
-  {
-    name: 'expertEmail',
-    label: 'Login Email',
-    type: 'email',
-    placeholder: 'you@example.com',
-    required: true,
-  },
-  {
-    name: 'expertPassword',
-    label: 'Login Password',
-    type: 'password',
-    placeholder: 'Create a password',
-    required: true,
-  },
-  {
-    name: 'availableSlots',
-    label: 'Available Slots (AM / PM)',
-    type: 'multiselect',
-    options: Array.from({ length: 24 }, (_, i) => {
-      const hour = i;
-      const period = hour < 12 ? 'AM' : 'PM';
-      const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-      return { value: `${hour12}:00 ${period}`, label: `${hour12}:00 ${period}` };
-    }),
-    required: true,
-  },
+  { name: 'name', label: 'Expert Name', type: 'text', placeholder: 'Dr. Anil Kumar', required: true },
+  { name: 'specialization', label: 'Specialization', type: 'text', placeholder: 'Paddy Expert', required: true },
+  { name: 'experience', label: 'Experience', type: 'text', placeholder: '10 Years', required: true },
+  { name: 'fee', label: 'Consultation Fee (₹)', type: 'number', placeholder: '400', required: true },
+  { name: 'imageFile', label: 'Profile Image', type: 'file', accept: 'image/*', required: true },
+  { name: 'description', label: 'Profile Description', type: 'textarea', placeholder: 'Expert in farming', required: true },
+  { name: 'location', label: 'Location', type: 'text', placeholder: 'Madhya Pradesh, India', required: true },
+  { name: 'expertEmail', label: 'Login Email', type: 'email', placeholder: 'you@example.com', required: true },
+  { name: 'expertPassword', label: 'Login Password', type: 'password', placeholder: 'Create a password', required: true },
+  { name: 'availableSlots', label: 'Available Slots (AM / PM)', type: 'multiselect', options: Array.from({ length: 24 }, (_, i) => ({ value: `${i % 12 || 12}:00 ${i < 12 ? 'AM' : 'PM'}`, label: `${i % 12 || 12}:00 ${i < 12 ? 'AM' : 'PM'}` })), required: true },
 ];
 
-const EXPERT_STORAGE_KEY = 'agriExpertApplications';
-const USER_STORAGE_KEY = 'agriUsers';
-const BOOKING_STORAGE_KEY = 'agriBookings';
-const REVIEW_STORAGE_KEY = 'agriReviews';
-const DELETE_REQUEST_STORAGE_KEY = 'agriDeleteRequests';
-
-const safeParse = (value) => {
-  if (typeof window === 'undefined') return [];
+export const updateProfile = async (id, name, imageUrl) => {
   try {
-    return JSON.parse(value || '[]');
-  } catch {
-    return [];
+    const updates = { name };
+    if (imageUrl) updates.image_url = imageUrl;
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error updating profile:", error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return false;
   }
 };
 
-export const loadSavedExpertApplications = () => {
-  if (typeof window === 'undefined') return [];
-  return safeParse(localStorage.getItem(EXPERT_STORAGE_KEY));
-};
-
-export const saveExpertApplication = (application) => {
-  const existing = loadSavedExpertApplications();
-  localStorage.setItem(EXPERT_STORAGE_KEY, JSON.stringify([...existing, application]));
-};
-
-export const deleteExpertApplication = (expertId) => {
-  const existing = loadSavedExpertApplications();
-  const updated = existing.map((expert) =>
-    expert.id === expertId
-      ? {
-          ...expert,
-          status: 'deleted',
-          deletedAt: new Date().toISOString(),
-          lastUpdated: new Date().toISOString(),
-        }
-      : expert
-  );
-  localStorage.setItem(EXPERT_STORAGE_KEY, JSON.stringify(updated));
-};
-
-export const updateExpertApplication = (updatedExpert) => {
-  const existing = loadSavedExpertApplications();
-  const updated = existing.map((expert) =>
-    expert.id === updatedExpert.id
-      ? { ...expert, ...updatedExpert, lastUpdated: new Date().toISOString() }
-      : expert
-  );
-  localStorage.setItem(EXPERT_STORAGE_KEY, JSON.stringify(updated));
-};
-
-export const getAllExpertApplications = () => {
-  return loadSavedExpertApplications();
-};
-
-export const getAllExperts = () => {
-  return loadSavedExpertApplications().filter((expert) => expert.status === 'approved');
-};
-
-export const getPendingExpertApplications = () => {
-  return loadSavedExpertApplications().filter((expert) => expert.status === 'pending');
-};
-
-export const getExpertApplicationById = (expertId) => {
-  return loadSavedExpertApplications().find((expert) => expert.id === expertId) || null;
-};
-
-export const getExpertById = (expertId) => {
-  return getAllExperts().find((expert) => expert.id === expertId) || null;
-};
-
-export const approveExpertApplication = (expertId) => {
-  const existing = loadSavedExpertApplications();
-  const updated = existing.map((expert) =>
-    expert.id === expertId
-      ? {
-          ...expert,
-          status: 'approved',
-          approvedAt: new Date().toISOString(),
-          lastUpdated: new Date().toISOString(),
-        }
-      : expert
-  );
-  localStorage.setItem(EXPERT_STORAGE_KEY, JSON.stringify(updated));
-};
-
-export const rejectExpertApplication = (expertId) => {
-  const existing = loadSavedExpertApplications();
-  const updated = existing.map((expert) =>
-    expert.id === expertId
-      ? {
-          ...expert,
-          status: 'rejected',
-          rejectedAt: new Date().toISOString(),
-          lastUpdated: new Date().toISOString(),
-        }
-      : expert
-  );
-  localStorage.setItem(EXPERT_STORAGE_KEY, JSON.stringify(updated));
-  return updated.find((expert) => expert.id === expertId) || null;
-};
-
-export const getExpertByOwnerEmail = (email) => {
-  return loadSavedExpertApplications().find((expert) => expert.ownerEmail?.toLowerCase() === email?.toLowerCase()) || null;
-};
-
-export const loadUsers = () => {
-  if (typeof window === 'undefined') return [];
-  return safeParse(localStorage.getItem(USER_STORAGE_KEY));
-};
-
-export const saveUser = (user) => {
-  const users = loadUsers();
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify([...users, user]));
-};
-
-export const findUserByEmail = (email) => {
-  return loadUsers().find((user) => user.email.toLowerCase() === email.toLowerCase()) || null;
-};
-
-export const deleteUserByEmail = (email) => {
-  const users = loadUsers();
-  const filtered = users.filter((user) => user.email.toLowerCase() !== email.toLowerCase());
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(filtered));
-};
-
-export const loadBookings = () => {
-  if (typeof window === 'undefined') return [];
-  return safeParse(localStorage.getItem(BOOKING_STORAGE_KEY));
-};
-
-export const saveBooking = (booking) => {
-  const existing = loadBookings();
-  localStorage.setItem(BOOKING_STORAGE_KEY, JSON.stringify([...existing, booking]));
-};
-
-export const updateBooking = (updatedBooking) => {
-  const existing = loadBookings();
-  const updated = existing.map((booking) =>
-    booking.id === updatedBooking.id ? { ...booking, ...updatedBooking } : booking
-  );
-  localStorage.setItem(BOOKING_STORAGE_KEY, JSON.stringify(updated));
-};
-
-export const getBookingsByStudent = (studentEmail) => {
-  return loadBookings().filter((booking) => booking.studentEmail.toLowerCase() === studentEmail.toLowerCase());
-};
-
-export const getBookingsByExpert = ({ expertId, expertEmail }) => {
-  return loadBookings().filter(
-    (booking) => booking.expertId === expertId || booking.expertEmail?.toLowerCase() === expertEmail?.toLowerCase()
-  );
-};
-
-export const loadReviews = () => {
-  if (typeof window === 'undefined') return [];
-  return safeParse(localStorage.getItem(REVIEW_STORAGE_KEY));
-};
-
-export const saveReview = (review) => {
-  const existing = loadReviews();
-  localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify([...existing, review]));
-};
-
-export const getReviewsByExpert = (expertId) => {
-  return loadReviews()
-    .filter((review) => review.expertId === expertId)
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-};
-
-export const hasUserReviewedExpert = (expertId, studentEmail) => {
-  return loadReviews().some(
-    (review) => review.expertId === expertId && review.studentEmail.toLowerCase() === studentEmail.toLowerCase()
-  );
-};
-
-export const getExpertRating = (expertId) => {
-  const reviews = getReviewsByExpert(expertId);
-  if (!reviews.length) {
-    return { average: 0, count: 0 };
-  }
-  const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-  return { average: Number(average.toFixed(1)), count: reviews.length };
-};
-
-// Delete Account Request Management
-export const loadDeleteRequests = () => {
-  if (typeof window === 'undefined') return [];
-  return safeParse(localStorage.getItem(DELETE_REQUEST_STORAGE_KEY));
-};
-
-export const createDeleteRequest = (expertId, expertEmail, expertName) => {
-  const existing = loadDeleteRequests();
-  const deleteRequest = {
-    id: `deleteReq_${Date.now()}`,
-    expertId,
-    expertEmail,
-    expertName,
-    status: 'pending',
-    requestedAt: new Date().toISOString(),
-  };
-  localStorage.setItem(DELETE_REQUEST_STORAGE_KEY, JSON.stringify([...existing, deleteRequest]));
-  return deleteRequest;
-};
-
-export const getPendingDeleteRequests = () => {
-  return loadDeleteRequests().filter((req) => req.status === 'pending');
-};
-
-export const approveDeleteRequest = (requestId) => {
-  const existing = loadDeleteRequests();
-  const request = existing.find((req) => req.id === requestId);
-  if (!request) return null;
-
-  // Delete the expert profile and user account
-  deleteExpertApplication(request.expertId);
-  deleteUserByEmail(request.expertEmail);
-
-  // Mark request as approved
-  const updated = existing.map((req) =>
-    req.id === requestId ? { ...req, status: 'approved', approvedAt: new Date().toISOString() } : req
-  );
-  localStorage.setItem(DELETE_REQUEST_STORAGE_KEY, JSON.stringify(updated));
-  return request;
-};
-
-export const rejectDeleteRequest = (requestId) => {
-  const existing = loadDeleteRequests();
-  const updated = existing.map((req) =>
-    req.id === requestId ? { ...req, status: 'rejected', rejectedAt: new Date().toISOString() } : req
-  );
-  localStorage.setItem(DELETE_REQUEST_STORAGE_KEY, JSON.stringify(updated));
-};
-
-export const getDeleteRequestByExpertId = (expertId) => {
-  return loadDeleteRequests().find((req) => req.expertId === expertId && req.status === 'pending');
-};

@@ -9,8 +9,11 @@ import { ApplyExpert } from './pages/ApplyExpert';
 import { ExpertProfile } from './pages/ExpertProfile';
 import { Login } from './pages/auth/Login';
 import { Signup } from './pages/auth/Signup';
+import { ForgotPassword } from './pages/auth/ForgotPassword';
+import { ResetPassword } from './pages/auth/ResetPassword';
 import { UserDashboard } from './pages/dashboard/UserDashboard';
 import { AdminDashboard } from './pages/dashboard/AdminDashboard';
+import { Profile } from './pages/dashboard/Profile';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
@@ -26,8 +29,11 @@ function App() {
             <Route path="/apply-expert" element={<ApplyExpert />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
           <Footer />
         </div>

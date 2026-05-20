@@ -19,9 +19,19 @@ export const ExpertProfile = () => {
   const { expertId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const expert = getExpertById(expertId);
-  const ratingInfo = expert ? getExpertRating(expert.id) : { average: 0, count: 0 };
-  const reviews = expert ? getReviewsByExpert(expert.id) : [];
+  const [expert, setExpert] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [ratingInfo, setRatingInfo] = useState({ average: 0, count: 0 });
+  const [reviews, setReviews] = useState([]);
+
+  React.useEffect(() => {
+    const fetchExpert = async () => {
+      const data = await getExpertById(expertId);
+      setExpert(data);
+      setLoading(false);
+    };
+    fetchExpert();
+  }, [expertId]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [selectedExpert, setSelectedExpert] = useState(null);
@@ -46,13 +56,58 @@ export const ExpertProfile = () => {
     setSelectedExpert(null);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     if (bookingDetails && user) {
+      toast.loading('Finalizing booking...', { id: 'booking-flow' });
+      const expertEmail = bookingDetails.expert.expertEmail || bookingDetails.expert.ownerEmail || bookingDetails.expert.email;
+      let zoomLink = `https://zoom.us/j/${Date.now()}`;
+
+      try {
+        let isoTime = new Date().toISOString();
+        if (bookingDetails.date && bookingDetails.time) {
+           const timePart = bookingDetails.time.split(' ')[0]; // assuming "10:00 AM"
+           isoTime = new Date(`${bookingDetails.date}T${timePart}:00`).toISOString();
+        }
+        
+        const zoomRes = await fetch('/api/zoom/meeting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: `Consultation: ${user.name} and ${bookingDetails.expert.name}`,
+            startTime: isoTime,
+            duration: 60
+          })
+        });
+        const zoomData = await zoomRes.json();
+        if (zoomData.joinUrl) zoomLink = zoomData.joinUrl;
+      } catch (err) {
+        console.error('Zoom link generation failed, using mock link.');
+      }
+      
+      try {
+        await fetch('/api/email/zoom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentEmail: user.email,
+            expertEmail: expertEmail,
+            zoomLink,
+            studentName: user.name,
+            expertName: bookingDetails.expert.name,
+            date: bookingDetails.date,
+            time: bookingDetails.time
+          })
+        });
+        toast.success('Consultation booked and emails sent!', { id: 'booking-flow' });
+      } catch (err) {
+        toast.error('Consultation booked but email sending failed.', { id: 'booking-flow' });
+      }
+
       const booking = {
         id: `booking_${Date.now()}`,
         expertId: bookingDetails.expert.id,
         expertName: bookingDetails.expert.name,
-        expertEmail: bookingDetails.expert.expertEmail || bookingDetails.expert.ownerEmail || bookingDetails.expert.email,
+        expertEmail,
         studentEmail: user.email,
         studentName: user.name,
         date: bookingDetails.date,
@@ -60,16 +115,20 @@ export const ExpertProfile = () => {
         notes: bookingDetails.notes,
         amount: bookingDetails.expert.fee,
         status: 'Upcoming',
-        zoomLink: `https://zoom.us/j/${Date.now()}`,
+        zoomLink,
       };
-      saveBooking(booking);
+      await saveBooking(booking);
     }
 
     setBookingDetails(null);
     navigate('/dashboard');
   };
 
-  if (!expert) {
+  if (loading) {
+    return <div className="pt-32 text-center text-on-surface">Loading expert profile...</div>;
+  }
+
+  if (!expert && !loading) {
     return <Navigate to="/experts" replace />;
   }
 
@@ -119,7 +178,7 @@ export const ExpertProfile = () => {
             <ArrowLeft className="w-4 h-4" /> Back to experts
           </Link>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-xl shadow-sm flex flex-col lg:flex-row gap-xl">
-            <img src={expert.imageUrl} alt={expert.name} className="w-full lg:w-72 h-72 rounded-3xl object-cover border border-outline-variant" />
+            <img src={expert.image_url} alt={expert.name} className="w-full lg:w-72 h-72 rounded-3xl object-cover border border-outline-variant" />
             <div className="flex-1 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <h1 className="font-h2 text-h2 text-on-surface">{expert.name}</h1>

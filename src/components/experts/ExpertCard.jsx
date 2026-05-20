@@ -14,7 +14,7 @@ export const ExpertCard = ({ expert, onBook, rating, reviewCount }) => {
     >
       <div className="flex items-start gap-4">
         <img 
-          src={expert.imageUrl} 
+          src={expert.image_url} 
           alt={expert.name} 
           className="w-16 h-16 rounded-full object-cover border-2 border-secondary-container"
         />

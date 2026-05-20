@@ -20,31 +20,41 @@ export const UserDashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const expertProfile = user.role === 'expert' ? getExpertByOwnerEmail(user.email) : null;
-  const existingDeleteRequest = expertProfile ? getDeleteRequestByExpertId(expertProfile.id) : null;
+  const [expertProfile, setExpertProfile] = useState(null);
+  const [existingDeleteRequest, setExistingDeleteRequest] = useState(null);
+  const [studentBookings, setStudentBookings] = useState([]);
+  const [expertBookings, setExpertBookings] = useState([]);
 
-  const handleDeleteAccountRequest = () => {
+  React.useEffect(() => {
+    if (!user) return;
+    
+    const loadData = async () => {
+      if (user.role === 'expert') {
+        const profile = await getExpertByOwnerEmail(user.email);
+        setExpertProfile(profile);
+        if (profile) {
+          setExistingDeleteRequest(await getDeleteRequestByExpertId(profile.id));
+          setExpertBookings(await getBookingsByExpert({ expertId: profile.id, expertEmail: user.email }));
+        }
+      } else {
+        setStudentBookings(await getBookingsByStudent(user.email));
+      }
+    };
+    loadData();
+  }, [user]);
+
+  const handleDeleteAccountRequest = async () => {
     if (!expertProfile) {
       toast.error('No expert profile found');
       return;
     }
 
     if (window.confirm('Are you sure you want to request account deletion? This will be sent to admin for approval.')) {
-      createDeleteRequest(expertProfile.id, user.email, expertProfile.name);
+      await createDeleteRequest(expertProfile.id, user.email, expertProfile.name);
       setDeleteRequested(true);
       toast.success('Account deletion request submitted. Admin will review and approve/reject.');
     }
   };
-
-  const studentBookings = useMemo(
-    () => (user.role === 'student' ? getBookingsByStudent(user.email) : []),
-    [user]
-  );
-
-  const expertBookings = useMemo(
-    () => (user.role === 'expert' && expertProfile ? getBookingsByExpert({ expertId: expertProfile.id, expertEmail: user.email }) : []),
-    [expertProfile, user]
-  );
 
   const upcomingBookings = (user.role === 'student' ? studentBookings : expertBookings).filter((booking) => booking.status === 'Upcoming');
   const completedBookings = (user.role === 'student' ? studentBookings : expertBookings).filter((booking) => booking.status === 'Completed');
