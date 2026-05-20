@@ -13,4 +13,7 @@ const expressBackendPlugin = () => ({
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), expressBackendPlugin()],
+  build: {
+    chunkSizeWarningLimit: 1600,
+  },
 })
