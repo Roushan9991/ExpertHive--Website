@@ -106,7 +106,8 @@ export const FindExperts = () => {
       try {
         let isoTime = new Date().toISOString();
         if (bookingDetails.date && bookingDetails.time) {
-           const timePart = bookingDetails.time.split(' ')[0]; // assuming "10:00 AM"
+           let timePart = bookingDetails.time.split(' ')[0]; // "9:00"
+           if (timePart.length === 4) timePart = '0' + timePart; // pad "9:00" to "09:00"
            isoTime = new Date(`${bookingDetails.date}T${timePart}:00`).toISOString();
         }
         
@@ -152,7 +153,7 @@ export const FindExperts = () => {
 
       const booking = {
         id: `booking_${Date.now()}`,
-        expertId: bookingDetails.expert.id,
+        expertId: bookingDetails.expert.owner_id || bookingDetails.expert.id,
         expertName: bookingDetails.expert.name,
         expertEmail,
         studentEmail: user.email,

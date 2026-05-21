@@ -133,16 +133,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Error signing out of Supabase:", error);
-    } finally {
-      setUser(null);
-      toast.success('Logged out successfully!');
-      // Force redirect to clear any stuck states
-      window.location.href = '/login';
-    }
+    setUser(null);
+    toast.success('Logged out successfully!');
+    supabase.auth.signOut().catch(console.error);
+    window.location.href = '/login';
   };
 
   return (
