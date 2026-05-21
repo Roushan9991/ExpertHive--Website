@@ -177,7 +177,7 @@ export const saveBooking = async (booking) => {
   // We pass null for expert_id in this case so it still saves the booking.
   const isMockExpert = booking.expertId.length < 10;
   
-  const { error } = await supabase.from('bookings').insert([{
+  const payload = {
     expert_id: isMockExpert ? null : booking.expertId,
     student_id: (await supabase.auth.getUser()).data.user?.id,
     expert_name: booking.expertName,
@@ -190,7 +190,11 @@ export const saveBooking = async (booking) => {
     amount: booking.amount,
     status: booking.status,
     zoom_link: booking.zoomLink
-  }]);
+  };
+
+  console.log('>>> ATTEMPTING TO INSERT BOOKING PAYLOAD:', payload);
+
+  const { error } = await supabase.from('bookings').insert([payload]);
   
   if (error) console.error('Error saving booking to Supabase:', error);
 };

@@ -57,9 +57,14 @@ export const ExpertProfile = () => {
   };
 
   const handlePaymentSuccess = async () => {
+    console.log('>>> handlePaymentSuccess TRIGGERED!');
+    console.log('>>> bookingDetails:', bookingDetails);
+    console.log('>>> user:', user);
+
     if (bookingDetails && user) {
+      console.log('>>> Passed the if condition. Starting zoom fetch...');
       toast.loading('Finalizing booking...', { id: 'booking-flow' });
-      const expertEmail = bookingDetails.expert.expertEmail || bookingDetails.expert.ownerEmail || bookingDetails.expert.email;
+      const expertEmail = bookingDetails.expert.expertEmail || bookingDetails.expert.owner_email || bookingDetails.expert.ownerEmail || bookingDetails.expert.email;
       let zoomLink = `https://zoom.us/j/${Date.now()}`;
 
       try {
@@ -69,6 +74,7 @@ export const ExpertProfile = () => {
            isoTime = new Date(`${bookingDetails.date}T${timePart}:00`).toISOString();
         }
         
+        console.log('>>> Calling /api/zoom/meeting...');
         const zoomRes = await fetch('/api/zoom/meeting', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,15 +85,17 @@ export const ExpertProfile = () => {
           })
         });
         
+        console.log('>>> Zoom response status:', zoomRes.status);
         if (!zoomRes.ok) throw new Error(`Zoom API returned ${zoomRes.status}`);
         const zoomData = await zoomRes.json();
         if (zoomData.joinUrl) zoomLink = zoomData.joinUrl;
       } catch (err) {
-        console.error('Zoom link generation failed:', err);
+        console.error('>>> Zoom link generation failed:', err);
         toast.error('Warning: Could not connect to Zoom. Using backup link.', { id: 'booking-flow' });
       }
       
       try {
+        console.log('>>> Calling /api/email/zoom...');
         const emailRes = await fetch('/api/email/zoom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -102,13 +110,15 @@ export const ExpertProfile = () => {
           })
         });
         
+        console.log('>>> Email response status:', emailRes.status);
         if (!emailRes.ok) throw new Error(`Email API returned ${emailRes.status}`);
         toast.success('Consultation booked and emails sent!', { id: 'booking-flow' });
       } catch (err) {
-        console.error('Email sending failed:', err);
+        console.error('>>> Email sending failed:', err);
         toast.error('Consultation booked but email sending failed. Check Vercel logs.', { id: 'booking-flow' });
       }
 
+      console.log('>>> Saving booking to database...');
       const booking = {
         id: `booking_${Date.now()}`,
         expertId: bookingDetails.expert.id,
@@ -118,17 +128,22 @@ export const ExpertProfile = () => {
         studentName: user.name,
         date: bookingDetails.date,
         time: bookingDetails.time,
-        notes: bookingDetails.notes,
+        notes: bookingDetails.notes || '',
         amount: bookingDetails.expert.fee,
         status: 'Upcoming',
-        zoomLink,
+        zoomLink
       };
+      
       await saveBooking(booking);
+      console.log('>>> Database save finished. Closing modal.');
+      setBookingDetails(null);
+      toast.success('Consultation successfully booked!', { id: 'booking-flow' });
+      navigate('/dashboard');
+    } else {
+      console.error('>>> MISSING DATA! bookingDetails or user is null!');
     }
-
-    setBookingDetails(null);
-    navigate('/dashboard');
   };
+
 
   if (loading) {
     return <div className="pt-32 text-center text-on-surface">Loading expert profile...</div>;
