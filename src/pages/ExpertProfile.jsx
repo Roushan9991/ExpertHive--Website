@@ -78,14 +78,17 @@ export const ExpertProfile = () => {
             duration: 60
           })
         });
+        
+        if (!zoomRes.ok) throw new Error(`Zoom API returned ${zoomRes.status}`);
         const zoomData = await zoomRes.json();
         if (zoomData.joinUrl) zoomLink = zoomData.joinUrl;
       } catch (err) {
-        console.error('Zoom link generation failed, using mock link.');
+        console.error('Zoom link generation failed:', err);
+        toast.error('Warning: Could not connect to Zoom. Using backup link.', { id: 'booking-flow' });
       }
       
       try {
-        await fetch('/api/email/zoom', {
+        const emailRes = await fetch('/api/email/zoom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -98,9 +101,12 @@ export const ExpertProfile = () => {
             time: bookingDetails.time
           })
         });
+        
+        if (!emailRes.ok) throw new Error(`Email API returned ${emailRes.status}`);
         toast.success('Consultation booked and emails sent!', { id: 'booking-flow' });
       } catch (err) {
-        toast.error('Consultation booked but email sending failed.', { id: 'booking-flow' });
+        console.error('Email sending failed:', err);
+        toast.error('Consultation booked but email sending failed. Check Vercel logs.', { id: 'booking-flow' });
       }
 
       const booking = {

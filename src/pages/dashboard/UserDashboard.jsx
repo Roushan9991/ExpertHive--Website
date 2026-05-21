@@ -147,7 +147,7 @@ export const UserDashboard = () => {
                           <p className="font-label-md font-semibold text-on-surface">{booking.studentName}</p>
                           <p className="font-caption text-on-surface-variant">{booking.date} • {booking.time}</p>
                         </div>
-                        <a href={booking.zoomLink} target="_blank" rel="noreferrer" className="font-label-md text-primary hover:underline">Zoom Link</a>
+                        <a href={booking.zoom_link || booking.zoomLink} target="_blank" rel="noreferrer" className="font-label-md text-primary hover:underline">Zoom Link</a>
                       </div>
                     </motion.div>
                   ))}
@@ -195,7 +195,7 @@ export const UserDashboard = () => {
                           <p className="font-label-md font-semibold text-on-surface">{booking.expertName}</p>
                           <p className="font-caption text-on-surface-variant">{booking.date} • {booking.time}</p>
                         </div>
-                        <a href={booking.zoomLink} target="_blank" rel="noreferrer" className="font-label-md text-primary hover:underline">Join call</a>
+                        <a href={booking.zoom_link || booking.zoomLink} target="_blank" rel="noreferrer" className="font-label-md text-primary hover:underline">Join call</a>
                       </div>
                     </motion.div>
                   ))}
