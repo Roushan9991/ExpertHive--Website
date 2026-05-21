@@ -12,7 +12,7 @@ export const sendZoomLinkEmail = async (studentEmail, expertEmail, zoomLink, stu
   const mailOptions = {
     from: process.env.SMTP_EMAIL,
     to: [studentEmail, expertEmail],
-    subject: 'AgriExpert Consultation - Zoom Link',
+    subject: 'ExpertHive Consultation Confirmation - Zoom Link',
     html: `
       <h2>Your consultation is confirmed!</h2>
       <p>Hello,</p>
@@ -21,7 +21,7 @@ export const sendZoomLinkEmail = async (studentEmail, expertEmail, zoomLink, stu
       <p><a href="${zoomLink}">${zoomLink}</a></p>
       <br />
       <p>Thank you,</p>
-      <p>AgriExpert Connect Team</p>
+      <p>ExpertHive Team</p>
     `,
   };
 
@@ -41,7 +41,7 @@ export const sendPasswordResetEmail = async (email, token) => {
   const mailOptions = {
     from: process.env.SMTP_EMAIL,
     to: email,
-    subject: 'AgriExpert Connect - Password Reset',
+    subject: 'ExpertHive - Password Reset',
     html: `
       <h2>Password Reset Request</h2>
       <p>You requested to reset your password.</p>
