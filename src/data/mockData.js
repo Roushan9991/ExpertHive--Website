@@ -220,12 +220,71 @@ export const hasUserReviewedExpert = async (expertId, studentEmail) => { return 
 export const getExpertRating = async (expertId) => { return { average: 0, count: 0 }; };
 
 // Delete Requests
-export const loadDeleteRequests = async () => [];
-export const createDeleteRequest = async () => {};
-export const getPendingDeleteRequests = async () => [];
-export const approveDeleteRequest = async () => {};
-export const rejectDeleteRequest = async () => {};
-export const getDeleteRequestByExpertId = async () => null;
+export const loadDeleteRequests = async () => {
+  const { data } = await supabase.from('experts').select('*').eq('status', 'delete_requested');
+  return (data || []).map((row) => ({
+    id: row.id,
+    expertId: row.id,
+    expertName: row.name,
+    expertEmail: row.owner_email || row.expertEmail,
+    requestedAt: row.deletedAt || row.lastUpdated || new Date().toISOString(),
+    status: row.status,
+  }));
+};
+
+export const createDeleteRequest = async (expertId, expertEmail, expertName) => {
+  const requestedAt = new Date().toISOString();
+  const { error } = await supabase
+    .from('experts')
+    .update({ status: 'delete_requested', deletedAt: requestedAt, lastUpdated: requestedAt })
+    .eq('id', expertId);
+
+  if (error) {
+    console.error('Error creating delete request:', error);
+    return false;
+  }
+  return true;
+};
+
+export const getPendingDeleteRequests = async () => {
+  const { data } = await supabase.from('experts').select('*').eq('status', 'delete_requested');
+  return (data || []).map((row) => ({
+    id: row.id,
+    expertId: row.id,
+    expertName: row.name,
+    expertEmail: row.owner_email || row.expertEmail,
+    requestedAt: row.deletedAt || row.lastUpdated || new Date().toISOString(),
+    status: row.status,
+  }));
+};
+
+export const approveDeleteRequest = async (requestId) => {
+  const deletedAt = new Date().toISOString();
+  await supabase
+    .from('experts')
+    .update({ status: 'deleted', deletedAt, lastUpdated: deletedAt })
+    .eq('id', requestId);
+};
+
+export const rejectDeleteRequest = async (requestId) => {
+  await supabase
+    .from('experts')
+    .update({ status: 'approved', deletedAt: null, lastUpdated: new Date().toISOString() })
+    .eq('id', requestId);
+};
+
+export const getDeleteRequestByExpertId = async (expertId) => {
+  const { data } = await supabase.from('experts').select('*').eq('id', expertId).eq('status', 'delete_requested').single();
+  if (!data) return null;
+  return {
+    id: data.id,
+    expertId: data.id,
+    expertName: data.name,
+    expertEmail: data.owner_email || data.expertEmail,
+    requestedAt: data.deletedAt || data.lastUpdated || new Date().toISOString(),
+    status: data.status,
+  };
+};
 
 export const EXPERT_APPLICATION_FIELDS = [
   { name: 'name', label: 'Expert Name', type: 'text', placeholder: 'Dr. Anil Kumar', required: true },

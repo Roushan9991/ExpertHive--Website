@@ -8,22 +8,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 export const Profile = () => {
-  const { user, fetchProfile } = useAuth();
-  
-  if (!user) return <Navigate to="/login" replace />;
+  const { user, fetchProfile, logout } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('user'); // 'user' or 'expert'
-  
+
   // User Form State
-  const [displayName, setDisplayName] = useState(user.name || '');
+  const [displayName, setDisplayName] = useState('');
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(user.image_url || null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
   // Expert Form State
   const [expertProfile, setExpertProfile] = useState(null);
   const [expertForm, setExpertForm] = useState({});
+
+  useEffect(() => {
+    if (!user) return;
+    setDisplayName(user.name || '');
+    setImagePreview(user.image_url || null);
+  }, [user]);
+
+  if (!user) return <Navigate to="/login" replace />;
 
   useEffect(() => {
     const loadExpertData = async () => {
@@ -307,6 +313,21 @@ export const Profile = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="flex justify-end mt-6">
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm('Are you sure you want to logout?')) {
+                logout();
+              }
+            }}
+            disabled={loading}
+            className="w-full sm:w-auto px-8 py-3 bg-error text-on-error rounded-lg font-label-md hover:opacity-90 transition-opacity"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </main>
   );

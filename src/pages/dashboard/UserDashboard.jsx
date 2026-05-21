@@ -15,15 +15,14 @@ import toast from 'react-hot-toast';
 export const UserDashboard = () => {
   const { user } = useAuth();
   const [deleteRequested, setDeleteRequested] = useState(false);
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
   const [expertProfile, setExpertProfile] = useState(null);
   const [existingDeleteRequest, setExistingDeleteRequest] = useState(null);
   const [studentBookings, setStudentBookings] = useState([]);
   const [expertBookings, setExpertBookings] = useState([]);
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   React.useEffect(() => {
     if (!user) return;
@@ -50,11 +49,19 @@ export const UserDashboard = () => {
     }
 
     if (window.confirm('Are you sure you want to request account deletion? This will be sent to admin for approval.')) {
-      await createDeleteRequest(expertProfile.id, user.email, expertProfile.name);
-      setDeleteRequested(true);
-      toast.success('Account deletion request submitted. Admin will review and approve/reject.');
+      const success = await createDeleteRequest(expertProfile.id, user.email, expertProfile.name);
+      if (success) {
+        setDeleteRequested(true);
+        toast.success('Account deletion request submitted. Admin will review and approve/reject.');
+      } else {
+        toast.error('Failed to submit deletion request. Please try again.');
+      }
     }
   };
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const upcomingBookings = (user.role === 'student' ? studentBookings : expertBookings).filter((booking) => booking.status === 'Upcoming');
   const completedBookings = (user.role === 'student' ? studentBookings : expertBookings).filter((booking) => booking.status === 'Completed');
@@ -89,30 +96,6 @@ export const UserDashboard = () => {
                 <p className="font-body-sm text-on-surface-variant mt-2">Total earned from booked sessions</p>
               </div>
             </div>
-
-            {existingDeleteRequest || deleteRequested ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-secondary-container text-on-secondary-container rounded-3xl p-6 border border-outline-variant flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <h3 className="font-h3 text-h3">Account Deletion Request Pending</h3>
-                  <p className="font-body-md mt-2">Your account deletion request is under admin review. You will receive notification once the admin approves or rejects your request.</p>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-sm flex justify-between items-center">
-                <div>
-                  <h3 className="font-h3 text-h3 text-on-surface">Delete Account</h3>
-                  <p className="font-body-md text-on-surface-variant mt-2">Request to delete your account and profile. This requires admin approval.</p>
-                </div>
-                <button
-                  onClick={handleDeleteAccountRequest}
-                  className="px-6 py-3 bg-error text-on-error rounded-lg font-label-md hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Request Deletion
-                </button>
-              </motion.div>
-            )}
           </>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-xl">
@@ -132,50 +115,78 @@ export const UserDashboard = () => {
         )}
 
         {user.role === 'expert' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="font-h3 text-h3 text-on-surface flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Upcoming Calls</h2>
-                <span className="font-caption text-on-surface-variant">{upcomingBookings.length} scheduled</span>
+          <div className="flex flex-col gap-xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
+              <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-h3 text-h3 text-on-surface flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Upcoming Calls</h2>
+                  <span className="font-caption text-on-surface-variant">{upcomingBookings.length} scheduled</span>
+                </div>
+                {upcomingBookings.length ? (
+                  <div className="mt-6 flex flex-col gap-4">
+                    {upcomingBookings.map((booking) => (
+                      <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-surface p-5 rounded-3xl border border-outline-variant">
+                        <div className="flex justify-between gap-4">
+                          <div>
+                            <p className="font-label-md font-semibold text-on-surface">{booking.studentName}</p>
+                            <p className="font-caption text-on-surface-variant">{booking.date} • {booking.time}</p>
+                          </div>
+                          <a href={booking.zoom_link || booking.zoomLink} target="_blank" rel="noreferrer" className="font-label-md text-primary hover:underline">Zoom Link</a>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-6 text-on-surface-variant">No upcoming calls scheduled.</p>
+                )}
               </div>
-              {upcomingBookings.length ? (
-                <div className="mt-6 flex flex-col gap-4">
-                  {upcomingBookings.map((booking) => (
-                    <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-surface p-5 rounded-3xl border border-outline-variant">
-                      <div className="flex justify-between gap-4">
-                        <div>
+
+              <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-h3 text-h3 text-on-surface flex items-center gap-2"><CheckCircle className="w-5 h-5 text-secondary" /> Completed Calls</h2>
+                  <span className="font-caption text-on-surface-variant">{completedBookings.length} done</span>
+                </div>
+                {completedBookings.length ? (
+                  <div className="mt-6 flex flex-col gap-4">
+                    {completedBookings.map((booking) => (
+                      <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-surface p-5 rounded-3xl border border-outline-variant">
+                        <div className="flex flex-col gap-2">
                           <p className="font-label-md font-semibold text-on-surface">{booking.studentName}</p>
                           <p className="font-caption text-on-surface-variant">{booking.date} • {booking.time}</p>
+                          <p className="font-caption text-on-surface-variant">Earned ₹{booking.amount}</p>
                         </div>
-                        <a href={booking.zoom_link || booking.zoomLink} target="_blank" rel="noreferrer" className="font-label-md text-primary hover:underline">Zoom Link</a>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-6 text-on-surface-variant">No upcoming calls scheduled.</p>
-              )}
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-6 text-on-surface-variant">No completed sessions yet.</p>
+                )}
+              </div>
             </div>
 
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="font-h3 text-h3 text-on-surface flex items-center gap-2"><CheckCircle className="w-5 h-5 text-secondary" /> Completed Calls</h2>
-                <span className="font-caption text-on-surface-variant">{completedBookings.length} done</span>
-              </div>
-              {completedBookings.length ? (
-                <div className="mt-6 flex flex-col gap-4">
-                  {completedBookings.map((booking) => (
-                    <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-surface p-5 rounded-3xl border border-outline-variant">
-                      <div className="flex flex-col gap-2">
-                        <p className="font-label-md font-semibold text-on-surface">{booking.studentName}</p>
-                        <p className="font-caption text-on-surface-variant">{booking.date} • {booking.time}</p>
-                        <p className="font-caption text-on-surface-variant">Earned ₹{booking.amount}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+            <div className="mt-10 bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-sm">
+              {existingDeleteRequest || deleteRequested ? (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-secondary-container text-on-secondary-container rounded-3xl p-6 border border-outline-variant flex items-start gap-4">
+                  <AlertCircle className="w-6 h-6 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <h3 className="font-h3 text-h3">Account Deletion Request Pending</h3>
+                    <p className="font-body-md mt-2">Your account deletion request is under admin review. You will receive notification once the admin approves or rejects your request.</p>
+                  </div>
+                </motion.div>
               ) : (
-                <p className="mt-6 text-on-surface-variant">No completed sessions yet.</p>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h3 className="font-h3 text-h3 text-on-surface">Request Expert Profile Deletion</h3>
+                    <p className="font-body-md text-on-surface-variant mt-2">Submit a deletion request for your expert profile. Admin approval is required before the profile is removed from the site.</p>
+                  </div>
+                  <button
+                    onClick={handleDeleteAccountRequest}
+                    className="px-6 py-3 bg-error text-on-error rounded-lg font-label-md hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Request Deletion
+                  </button>
+                </motion.div>
               )}
             </div>
           </div>

@@ -249,10 +249,7 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       setUser(null);
-
-      navigate('/', {
-        replace: true,
-      });
+      setLoading(false);
 
       toast.success(
         'Logged out successfully!'

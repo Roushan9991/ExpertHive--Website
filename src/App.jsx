@@ -18,8 +18,8 @@ import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="flex flex-col min-h-screen">
           <Navbar />
           <Routes>
@@ -38,8 +38,8 @@ function App() {
           <Footer />
         </div>
         <Toaster position="bottom-right" />
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
