@@ -173,8 +173,12 @@ export const loadBookings = async () => {
 };
 
 export const saveBooking = async (booking) => {
+  // If the expertId is a mock ID (like "1" or "2"), it's not a valid UUID and will fail the database Foreign Key check.
+  // We pass null for expert_id in this case so it still saves the booking.
+  const isMockExpert = booking.expertId.length < 10;
+  
   const { error } = await supabase.from('bookings').insert([{
-    expert_id: booking.expertId,
+    expert_id: isMockExpert ? null : booking.expertId,
     student_id: (await supabase.auth.getUser()).data.user?.id,
     expert_name: booking.expertName,
     expert_email: booking.expertEmail,
@@ -187,7 +191,8 @@ export const saveBooking = async (booking) => {
     status: booking.status,
     zoom_link: booking.zoomLink
   }]);
-  if (error) console.error(error);
+  
+  if (error) console.error('Error saving booking to Supabase:', error);
 };
 
 export const updateBooking = async (updatedBooking) => {

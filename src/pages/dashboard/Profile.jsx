@@ -27,6 +27,7 @@ export const Profile = () => {
 
   useEffect(() => {
     const loadExpertData = async () => {
+      if (!user) return;
       if (user.role === 'expert') {
         const profile = await getExpertByOwnerEmail(user.email);
         setExpertProfile(profile);
