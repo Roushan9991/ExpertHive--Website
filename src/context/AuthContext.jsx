@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { getExpertByOwnerEmail } from '../data/mockData';
@@ -10,6 +11,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check active session on mount
@@ -133,10 +135,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    setUser(null);
-    toast.success('Logged out successfully!');
-    supabase.auth.signOut().catch(console.error);
-    window.location.href = '/login';
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast.success('Logged out successfully!');
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Unable to log out. Please try again.');
+    }
   };
 
   return (
