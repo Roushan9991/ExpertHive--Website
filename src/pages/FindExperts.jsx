@@ -97,27 +97,79 @@ export const FindExperts = () => {
     setSelectedExpert(null);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     if (bookingDetails && user) {
+      toast.loading('Finalizing booking...', { id: 'booking-flow' });
+      const expertEmail = bookingDetails.expert.expertEmail || bookingDetails.expert.owner_email || bookingDetails.expert.ownerEmail || bookingDetails.expert.email;
+      let zoomLink = `https://zoom.us/j/${Date.now()}`;
+
+      try {
+        let isoTime = new Date().toISOString();
+        if (bookingDetails.date && bookingDetails.time) {
+           const timePart = bookingDetails.time.split(' ')[0]; // assuming "10:00 AM"
+           isoTime = new Date(`${bookingDetails.date}T${timePart}:00`).toISOString();
+        }
+        
+        const zoomRes = await fetch('/api/zoom/meeting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: `Consultation: ${user.name} and ${bookingDetails.expert.name}`,
+            startTime: isoTime,
+            duration: 60
+          })
+        });
+        
+        if (!zoomRes.ok) throw new Error(`Zoom API returned ${zoomRes.status}`);
+        const zoomData = await zoomRes.json();
+        if (zoomData.joinUrl) zoomLink = zoomData.joinUrl;
+      } catch (err) {
+        console.error('Zoom link generation failed:', err);
+        toast.error('Warning: Could not connect to Zoom. Using backup link.', { id: 'booking-flow' });
+      }
+      
+      try {
+        const emailRes = await fetch('/api/email/zoom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentEmail: user.email,
+            expertEmail: expertEmail,
+            zoomLink,
+            studentName: user.name,
+            expertName: bookingDetails.expert.name,
+            date: bookingDetails.date,
+            time: bookingDetails.time
+          })
+        });
+        
+        if (!emailRes.ok) throw new Error(`Email API returned ${emailRes.status}`);
+        toast.success('Consultation booked and emails sent!', { id: 'booking-flow' });
+      } catch (err) {
+        console.error('Email sending failed:', err);
+        toast.error('Consultation booked but email sending failed. Check Vercel logs.', { id: 'booking-flow' });
+      }
+
       const booking = {
         id: `booking_${Date.now()}`,
         expertId: bookingDetails.expert.id,
         expertName: bookingDetails.expert.name,
-        expertEmail: bookingDetails.expert.expertEmail || bookingDetails.expert.ownerEmail || bookingDetails.expert.email,
+        expertEmail,
         studentEmail: user.email,
         studentName: user.name,
         date: bookingDetails.date,
         time: bookingDetails.time,
-        notes: bookingDetails.notes,
+        notes: bookingDetails.notes || '',
         amount: bookingDetails.expert.fee,
         status: 'Upcoming',
-        zoomLink: `https://zoom.us/j/${Date.now()}`,
+        zoomLink
       };
-      saveBooking(booking);
+      
+      await saveBooking(booking);
+      setBookingDetails(null);
+      toast.success('Consultation successfully booked!', { id: 'booking-flow' });
+      navigate('/dashboard');
     }
-
-    setBookingDetails(null);
-    navigate('/dashboard');
   };
 
   return (
