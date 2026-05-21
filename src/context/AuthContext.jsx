@@ -11,143 +11,274 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check active session on mount
+    let mounted = true;
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await fetchProfile(session.user);
-      } else {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (session?.user) {
+          await fetchProfile(session.user);
+        } else {
+          setUser(null);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
         setLoading(false);
       }
     };
-    // Parse URL hash for OAuth errors (like our custom Postgres trigger error)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+    // OAuth error handling
+    const hashParams = new URLSearchParams(
+      window.location.hash.substring(1)
+    );
+
     if (hashParams.get('error_description')) {
-      const errorMsg = decodeURIComponent(hashParams.get('error_description').replace(/\+/g, ' '));
-      // Supabase hides custom trigger messages and returns this generic error instead
-      if (errorMsg.includes('sign up with your email') || errorMsg.includes('Database error saving new user')) {
-        toast.error('Google Login Failed: You must sign up with an email and password first.');
-      } else {
-        toast.error(`Authentication Error: ${errorMsg}`);
-      }
-      // Clean up the URL hash so the error doesn't show again on refresh
-      window.history.replaceState(null, '', window.location.pathname);
+      const errorMsg = decodeURIComponent(
+        hashParams
+          .get('error_description')
+          .replace(/\+/g, ' ')
+      );
+
+      toast.error(
+        errorMsg.includes('Database error')
+          ? 'Google Login Failed'
+          : errorMsg
+      );
+
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname
+      );
     }
 
     checkSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        await fetchProfile(session.user);
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        try {
+          if (event === 'SIGNED_OUT') {
+            setUser(null);
+            setLoading(false);
 
-    return () => subscription.unsubscribe();
+            navigate('/', { replace: true });
+
+            return;
+          }
+
+          if (session?.user) {
+            await fetchProfile(session.user);
+          }
+        } catch (err) {
+          console.error(err);
+          setLoading(false);
+        }
+      }
+    );
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (authUser) => {
     try {
+      setLoading(true);
+
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
-        .single();
-        
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
+        .maybeSingle();
+
+      if (error) {
+        console.error(error);
       }
 
-      // If user is expert, ensure they are approved before allowing login access
-      // (Optional: handle this on the route level, but we do it here to mirror mockData logic)
-      if (profile && profile.role === 'expert') {
-        const expertProfile = await getExpertByOwnerEmail(profile.email);
-        if (!expertProfile || expertProfile.status !== 'approved') {
-          // Allow login but they are restricted (they can see their status in dashboard)
+      if (profile?.role === 'expert') {
+        try {
+          const expertProfile =
+            await getExpertByOwnerEmail(
+              profile.email
+            );
+
+          console.log(
+            'Expert status:',
+            expertProfile?.status
+          );
+        } catch (err) {
+          console.error(err);
         }
       }
 
-      if (profile) {
-        if (profile.email.trim().toLowerCase() === 'support@experthive.co.in' || profile.email.trim().toLowerCase() === import.meta.env.VITE_SMTP_EMAIL) {
-          profile.role = 'admin';
-        }
-        setUser({ ...authUser, ...profile });
-      } else {
-        // Fallback if profile trigger failed
-        const fallbackRole = (authUser.email.trim().toLowerCase() === 'support@experthive.co.in' || authUser.email.trim().toLowerCase() === import.meta.env.VITE_SMTP_EMAIL) 
-          ? 'admin' 
-          : (authUser.user_metadata?.role || 'student');
-          
-        setUser({ 
-          id: authUser.id, 
-          email: authUser.email, 
-          name: authUser.user_metadata?.full_name || authUser.email,
-          role: fallbackRole
-        });
-      }
+      const email =
+        (
+          profile?.email ||
+          authUser?.email ||
+          ''
+        )
+          .trim()
+          .toLowerCase();
+
+      const isAdmin =
+        email ===
+          'support@experthive.co.in' ||
+        email ===
+          (
+            import.meta.env
+              .VITE_SMTP_EMAIL || ''
+          )
+            .trim()
+            .toLowerCase();
+
+      const finalUser = profile
+        ? {
+            ...authUser,
+            ...profile,
+            role: isAdmin
+              ? 'admin'
+              : profile.role,
+          }
+        : {
+            id: authUser.id,
+            email: authUser.email,
+            name:
+              authUser.user_metadata
+                ?.full_name ||
+              authUser.email,
+            role: isAdmin
+              ? 'admin'
+              : authUser.user_metadata
+                  ?.role ||
+                'student',
+          };
+
+      setUser(finalUser);
     } catch (err) {
-      console.error(err);
+      console.error(
+        'fetchProfile error:',
+        err
+      );
+
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const login = async (
+    email,
+    password
+  ) => {
+    const { error } =
+      await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        }
+      );
+
     if (error) {
-      toast.error(error.message || 'Invalid email or password.');
+      toast.error(error.message);
       return false;
     }
-    toast.success('Logged in successfully!');
+
+    toast.success(
+      'Logged in successfully!'
+    );
+
     return true;
   };
 
-  const signup = async (name, email, password, role = 'student', autoLogin = true) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
-          role: role
-        }
-      }
-    });
+  const signup = async (
+    name,
+    email,
+    password,
+    role = 'student',
+    autoLogin = true
+  ) => {
+    const { error } =
+      await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            role,
+          },
+        },
+      });
 
     if (error) {
-      toast.error(error.message || 'Error signing up.');
+      toast.error(error.message);
       return false;
     }
-    
+
     if (!autoLogin) {
       await supabase.auth.signOut();
       setUser(null);
-    } else {
-      toast.success('Account created successfully!');
     }
+
+    toast.success(
+      'Account created successfully!'
+    );
+
     return true;
   };
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      setLoading(true);
+
+      const { error } =
+        await supabase.auth.signOut();
+
+      if (error) throw error;
+
       setUser(null);
-      toast.success('Logged out successfully!');
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Unable to log out. Please try again.');
+
+      navigate('/', {
+        replace: true,
+      });
+
+      toast.success(
+        'Logged out successfully!'
+      );
+    } catch (err) {
+      console.error(err);
+
+      toast.error(
+        'Logout failed'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, fetchProfile }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        signup,
+        logout,
+        fetchProfile,
+      }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );
