@@ -31,7 +31,7 @@ export const ExpertCard = ({ expert, onBook, rating, reviewCount }) => {
       <div className="flex flex-col gap-2 mt-2">
         <div className="flex items-center gap-2 text-on-surface-variant font-caption text-caption">
           <Briefcase className="w-4 h-4 text-secondary" />
-          <span>{expert.experience} Experience</span>
+          <span>{expert.experience} Years Experience</span>
         </div>
         <div className="flex items-center gap-2 text-on-surface-variant font-caption text-caption">
           <MapPin className="w-4 h-4 text-secondary" />

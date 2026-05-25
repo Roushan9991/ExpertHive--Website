@@ -29,11 +29,9 @@ export const Profile = () => {
     setImagePreview(user.image_url || null);
   }, [user]);
 
-  if (!user) return <Navigate to="/login" replace />;
-
   useEffect(() => {
+    if (!user) return;
     const loadExpertData = async () => {
-      if (!user) return;
       if (user.role === 'expert') {
         const profile = await getExpertByOwnerEmail(user.email);
         setExpertProfile(profile);
@@ -44,6 +42,8 @@ export const Profile = () => {
     };
     loadExpertData();
   }, [user]);
+
+  if (!user) return <Navigate to="/login" replace />;
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];

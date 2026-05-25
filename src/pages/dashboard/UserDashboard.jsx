@@ -20,9 +20,7 @@ export const UserDashboard = () => {
   const [studentBookings, setStudentBookings] = useState([]);
   const [expertBookings, setExpertBookings] = useState([]);
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+
 
   React.useEffect(() => {
     if (!user) return;

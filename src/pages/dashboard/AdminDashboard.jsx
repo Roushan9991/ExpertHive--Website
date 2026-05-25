@@ -74,7 +74,7 @@ export const AdminDashboard = () => {
     setEditingExpert(expert);
     setEditForm({
       ...expert,
-      availableSlots: expert.availableSlots || [],
+      availableSlots: expert.availableSlots || expert.available_slots || [],
     });
   };
 
@@ -272,7 +272,7 @@ export const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {applications.map((expert) => (
+                {applications.filter((app) => app.status === 'pending').map((expert) => (
                   <tr key={expert.id} className="border-b border-outline-variant hover:bg-surface/50 transition-colors">
                     <td className="p-4 flex items-center gap-3">
                       <img src={expert.image_url} alt={expert.name} className="w-8 h-8 rounded-full object-cover" />
@@ -281,7 +281,7 @@ export const AdminDashboard = () => {
                     <td className="p-4 font-body-md text-on-surface-variant">{expert.specialization}</td>
                     <td className="p-4 font-body-md text-on-surface">₹{expert.fee}</td>
                     <td className="p-4 font-body-md text-on-surface">
-                      <span className={`px-3 py-1 rounded-full ${expert.status === 'approved' ? 'bg-primary/10 text-primary' : 'bg-secondary-container text-secondary'}`}>
+                      <span className="px-3 py-1 rounded-full bg-secondary-container text-secondary">
                         {expert.status}
                       </span>
                     </td>
@@ -292,41 +292,34 @@ export const AdminDashboard = () => {
                       >
                         View
                       </button>
-                      {expert.status === 'pending' ? (
-                        <>
-                          <button
-                            onClick={() => handleApproveExpert(expert.id)}
-                            className="font-label-md text-primary hover:underline"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleRejectExpert(expert.id, expert.expertEmail)}
-                            className="font-label-md text-error hover:text-error-container transition-colors"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleEditExpert(expert)}
-                            className="font-label-md text-primary hover:underline"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteExpert(expert.id, expert.expertEmail)}
-                            className="font-label-md text-error hover:text-error-container transition-colors flex items-center gap-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </button>
-                        </>
-                      )}
+                      <button
+                        onClick={() => handleApproveExpert(expert.id)}
+                        className="font-label-md text-primary hover:underline"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleRejectExpert(expert.id, expert.expertEmail)}
+                        className="font-label-md text-error hover:text-error-container transition-colors"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleEditExpert(expert)}
+                        className="font-label-md text-primary hover:underline"
+                      >
+                        Edit
+                      </button>
                     </td>
                   </tr>
                 ))}
+                {applications.filter((app) => app.status === 'pending').length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-on-surface-variant font-body-md">
+                      No pending expert applications.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -434,10 +427,10 @@ export const AdminDashboard = () => {
               <div className="mb-8">
                 <span className="font-label-md text-on-surface block mb-3">Available Slots</span>
                 <div className="flex flex-wrap gap-2">
-                  {(viewingExpert.availableSlots || []).map(slot => (
+                  {(viewingExpert.availableSlots || viewingExpert.available_slots || []).map(slot => (
                     <span key={slot} className="px-3 py-1 bg-primary/10 text-primary rounded-full font-label-sm">{slot}</span>
                   ))}
-                  {(!viewingExpert.availableSlots || viewingExpert.availableSlots.length === 0) && (
+                  {(!viewingExpert.availableSlots && !viewingExpert.available_slots || (viewingExpert.availableSlots || viewingExpert.available_slots || []).length === 0) && (
                     <span className="font-body-sm text-on-surface-variant">No slots selected</span>
                   )}
                 </div>

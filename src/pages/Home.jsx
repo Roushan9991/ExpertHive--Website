@@ -1,8 +1,43 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, Verified, Sprout, Video } from 'lucide-react';
+import { ArrowRight, Search, ShieldCheck, Trophy, Briefcase, Clock, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getPlatformStats } from '../data/mockData';
+
+const featureCards = [
+  { title: 'Verified Expert Badge', description: 'Trust professionals vetted for real industry experience.', icon: ShieldCheck },
+  { title: 'Session Ratings', description: 'Choose experts with feedback from students.', icon: Trophy },
+  { title: 'Consultation History', description: 'See expert with total consultations offered to students.', icon: Briefcase },
+  { title: 'Customer Support', description: 'Write us on support@experthive.co.in in case of any issues faced', icon: Clock },
+];
+
+const audienceItems = [
+  'Students',
+  'MBA Aspirants',
+  'Interns',
+  'Early Career Professionals',
+  'Career Switchers',
+  'Job Seekers',
+];
+
+const faqItems = [
+  {
+    question: 'How do sessions work?',
+    answer: 'Book one-on-one time with a verified expert, join the session online, and get practical guidance tailored to your career goals.',
+  },
+  {
+    question: 'How are experts verified?',
+    answer: 'Experts are verified through a rigorous process that includes background checks, experience validation, and student feedback to ensure quality guidance.',
+  },
+  {
+    question: 'Can students request custom guidance?',
+    answer: 'Yes - you can ask experts for interview prep, project feedback, career planning, or industry-specific advice.',
+  },
+  {
+    question: 'How do experts earn?',
+    answer: 'Experts earn by sharing knowledge, mentoring learners, and hosting paid one-on-one sessions.',
+  },
+];
 
 export const Home = () => {
   const [stats, setStats] = useState({ totalExperts: 0, totalConsultations: 0, averageRating: '0.0' });
@@ -10,149 +45,207 @@ export const Home = () => {
   useEffect(() => {
     getPlatformStats().then(setStats);
   }, []);
-  return (
-    <main className="flex-grow pt-16">
-      {/* Hero Section */}
-      <section className="relative w-full min-h-[calc(100vh-64px)] flex items-center justify-center px-lg py-xl overflow-hidden bg-surface-container-high">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=1920&auto=format&fit=crop" 
-            alt="Agricultural field background" 
-            className="w-full h-full object-cover opacity-80" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-surface/90 via-surface/70 to-transparent"></div>
-        </div>
 
-        <div className="relative z-10 w-full max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col gap-lg max-w-2xl"
-          >
-            <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container font-label-md text-label-md rounded-full w-max shadow-sm">
-              Early Career Support
-            </span>
-            <h1 className="font-h1 text-h1 text-on-surface">
-              Connect Students or Interns with Industry Experts
-            </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
-              Find mentorship for your job, internship, or academic project in paddy, wheat, or any other domain in agriculture. Get practical guidance from professionals who understand the industry.
-            </p>
-            <div className="flex flex-wrap items-center gap-md pt-4">
-              <Link to="/experts" className="font-label-md text-label-md text-on-primary bg-primary hover:bg-primary-container transition-colors px-6 py-3 rounded-lg shadow-sm">
-                Find Mentors
+  return (
+    <main className="flex-grow bg-slate-50">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80"
+            alt="Green farmland in sunlight"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-slate-950/60" />
+        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_32%)] mix-blend-screen" />
+        <div className="relative max-w-7xl mx-auto px-6 py-12 lg:px-8 lg:py-20">
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="space-y-8 text-white z-10 relative">
+              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-100 ring-1 ring-white/15">
+                Bridge the gap between classroom learning and real industry experience
+              </span>
+              <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_8px_20px_rgba(0,0,0,0.35)] sm:text-5xl">Learn from Professionals. Grow with Real Experience.</h1>
+              <p className="max-w-2xl text-lg leading-8 text-emerald-100/90">Book sessions with experienced professionals across industries in Agricultural Domain to gain practical knowledge, career guidance, and insights beyond classrooms.</p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/experts" className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-600">Explore Experts</Link>
+                <Link to="/apply-expert" className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-slate-950/10 transition hover:bg-slate-100">Become an Expert</Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="rounded-3xl bg-white/95 p-5 shadow-xl shadow-slate-950/5 ring-1 ring-slate-900/5">
+                  <p className="text-sm font-semibold text-slate-950">Search Expert by Domain</p>
+                    <p className="mt-3 text-sm text-slate-600">Paddy, wheat, supply chain and many more domain experts are available.</p>
+                </div>
+                <div className="rounded-3xl bg-white/95 p-5 shadow-xl shadow-slate-950/5 ring-1 ring-slate-900/5">
+                  <p className="text-sm font-semibold text-slate-950">Real Industry Experience</p>
+                  <p className="mt-3 text-sm text-slate-600">See professionals with real industry backgrounds and get valuable insights from their experience.</p>
+                </div>
+                <div className="rounded-3xl bg-white/95 p-5 shadow-xl shadow-slate-950/5 ring-1 ring-slate-900/5">
+                  <p className="text-sm font-semibold text-slate-950">Flexible pricing</p>
+                  <p className="mt-3 text-sm text-slate-600">Affordable Pricing that fits student budgets. compare and find the best option for you.</p>
+                </div>
+              </div>
+            </div>
+            <div className="relative rounded-[32px] bg-slate-900 p-8 text-white shadow-xl ring-1 ring-slate-200/10 sm:p-10">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)] opacity-75" />
+              <div className="relative grid gap-6">
+                <div className="rounded-3xl bg-slate-800/95 p-6 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">Expert session spotlight</p>
+                  <h2 className="mt-4 text-2xl font-semibold">Compliant Paddy Project</h2>
+                  <p className="mt-3 text-sm text-slate-300">45 min session · ₹499 · 4.9 rating</p>
+                </div>
+                <div className="rounded-3xl bg-slate-800/95 p-6 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">Career Guidance</p>
+                  <h2 className="mt-4 text-2xl font-semibold">Agri Jobs & Interview Readiness</h2>
+                  <p className="mt-3 text-sm text-slate-300">30 min session · ₹299 · expert feedback</p>
+                </div>
+                <div className="rounded-3xl bg-slate-800/95 p-6 shadow-lg backdrop-blur-sm">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">Mentor rating</p>
+                  <p className="mt-4 text-5xl font-bold">{/*{stats.averageRating}*/}4.9</p>
+                  <p className="mt-2 text-sm text-slate-300">Average student rating</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-50 py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <div className="space-y-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-600">How it works</p>
+              <h2 className="text-3xl font-semibold text-slate-950">Simple steps for students and experts.</h2>
+              <p className="max-w-xl text-lg leading-8 text-slate-600">ExpertHive makes it easy to find the right professional, schedule a session, and gain real guidance designed to build confidence and career momentum.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <p className="text-xl font-semibold text-slate-900">🎓 Students</p>
+                <ol className="mt-4 space-y-3 text-slate-600 list-decimal list-inside">
+                  <li>Find an expert</li>
+                  <li>Book a session</li>
+                  <li>Learn from real experience</li>
+                  <li>Apply in projects & career</li>
+                </ol>
+              </div>
+              <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <p className="text-xl font-semibold text-slate-900">👨‍💼 Experts</p>
+                <ol className="mt-4 space-y-3 text-slate-600 list-decimal list-inside">
+                  <li>Create profile</li>
+                  <li>Set availability</li>
+                  <li>Mentor learners</li>
+                  <li>Earn from knowledge</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Why ExpertHive?</p>
+            <h2 className="mt-4 text-3xl font-semibold text-slate-950">The value you get is industry-ready guidance, not another course.</h2>
+          </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              'Learn what industry actually expects',
+              'Get practical insights, not theory',
+              'Connect with experienced professionals',
+              'Build confidence for interviews & internships',
+              'Flexible sessions at affordable pricing',
+            ].map((item) => (
+              <div key={item} className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <div className="flex items-center gap-3 text-slate-900 font-semibold">
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                  <span>{item}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-50 py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Who is this for?</p>
+            <h2 className="mt-4 text-3xl font-semibold text-slate-950">Learners and early professionals who want real career momentum.</h2>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {audienceItems.map((item) => (
+              <div key={item} className="rounded-3xl bg-white p-6 text-center shadow-sm border border-slate-200">
+                <p className="text-lg font-semibold text-slate-900">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid gap-6 lg:grid-cols-4">
+            {featureCards.map(({ title, description, icon: Icon }) => (
+              <div key={title} className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <h3 className="mt-5 text-lg font-semibold text-slate-950">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2">
+            <div className="space-y-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Trusted by learners</p>
+              <h2 className="text-3xl font-semibold text-slate-950">Student Testimonials</h2>
+              <p className="max-w-xl text-base leading-7 text-slate-600">Findout what students are saying about our ExpertHive platform</p>
+            </div>
+            <div className="grid gap-6">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                <p className="font-semibold text-slate-900">“My mentor helped me understand compliant paddy project and prepare for internship presentation”</p>
+                <p className="mt-4 text-sm text-slate-600">Ganesh G, Intern @ ITC Limited(ABD)</p>
+              </div>
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                <p className="font-semibold text-slate-900">“The session gave me confidence to switch from academics into a real marketing role.”</p>
+                <p className="mt-4 text-sm text-slate-600">Priya, Student @ MANAGE Hyderabad</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-50 py-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2">
+            <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <h2 className="text-2xl font-semibold text-slate-950">Frequently Asked Questions</h2>
+              <div className="mt-8 space-y-4">
+                {faqItems.map((item) => (
+                  <div key={item.question} className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
+                    <p className="font-semibold text-slate-900">{item.question}</p>
+                    <p className="mt-2 text-slate-600">{item.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-3xl bg-slate-900 p-8 text-white shadow-sm border border-slate-800">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-300">Book Session</p>
+              <h2 className="mt-4 text-3xl font-semibold">Ready to connect with an expert?</h2>
+              <p className="mt-4 text-base leading-7 text-slate-200">Start with a quick search and book your first session in minutes. Real experience is one conversation away.</p>
+              <Link to="/experts" className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                Browse Experts
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-
-            {/* Quick Stats Bento */}
-            <div className="grid grid-cols-3 gap-sm mt-8 p-md bg-surface/80 backdrop-blur-md rounded-xl border border-outline-variant shadow-sm">
-              <div className="flex flex-col border-r border-outline-variant pr-6">
-                <span className="font-h2 text-h2 text-primary">{stats.totalExperts}+</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Verified Experts</span>
-              </div>
-              <div className="flex flex-col border-r border-outline-variant pr-6 pl-2">
-                <span className="font-h2 text-h2 text-primary">{stats.totalConsultations}+</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Consultations</span>
-              </div>
-              <div className="flex flex-col pl-2">
-                <span className="font-h2 text-h2 text-primary">{stats.averageRating}/5</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Average Rating</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="w-full max-w-container-max mx-auto px-lg py-xl flex flex-col gap-xl my-8">
-        <div className="text-center max-w-3xl mx-auto flex flex-col gap-sm">
-          <h2 className="font-h2 text-h2 text-on-surface">Guidance for Your Job, Internship, or Campus Project</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant">A platform that links learners with agriculture experts to support practical learning, project success, and career growth.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-          <motion.div whileHover={{ y: -8 }} className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant flex flex-col gap-md shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary mb-2">
-              <Sprout className="w-6 h-6" />
-            </div>
-            <h3 className="font-h3 text-h3 text-on-surface">Mentorship for Learners</h3>
-            <p className="font-body-md text-body-md text-on-surface-variant">Get advice on academic assignments, internship tasks, and career steps from experts in paddy, wheat, and agriculture operations.</p>
-          </motion.div>
-          
-          <motion.div whileHover={{ y: -8 }} className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant flex flex-col gap-md shadow-sm relative overflow-hidden">
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-tertiary-fixed-dim rounded-full opacity-20 blur-2xl"></div>
-            <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary mb-2 relative z-10">
-              <Verified className="w-6 h-6" />
-            </div>
-            <h3 className="font-h3 text-h3 text-on-surface relative z-10">Trusted Industry Insight</h3>
-            <p className="font-body-md text-body-md text-on-surface-variant relative z-10">Learn from agriculture professionals who know the field and can help you prepare for interviews, reports, and practical farm work.</p>
-          </motion.div>
-
-          <motion.div whileHover={{ y: -8 }} className="bg-primary text-on-primary rounded-xl p-lg flex flex-col gap-md shadow-lg">
-            <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary-fixed mb-2">
-              <Video className="w-6 h-6" />
-            </div>
-            <h3 className="font-h3 text-h3 text-on-primary">Easy Expert Sessions</h3>
-            <p className="font-body-md text-body-md text-primary-fixed-dim">Book live guidance sessions quickly and connect with mentors over video or chat for real-time support.</p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="w-full bg-surface-container py-xl">
-        <div className="max-w-container-max mx-auto px-lg flex flex-col lg:flex-row gap-xl items-center">
-          <div className="lg:w-1/3 flex flex-col gap-md">
-            <h2 className="font-h2 text-h2 text-on-surface">Success Stories from the Students</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant">Hear how expert guidance is making students more confident in their early stages of learning.</p>
-            
           </div>
-          <div className="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-gutter">
-            <div className="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col gap-md mt-0 sm:mt-8">
-              <div className="flex items-center gap-xs text-tertiary-container">
-                {[1,2,3,4,5].map(i => <Starey key={i} />)}
-              </div>
-              <p className="font-body-md text-body-md text-on-surface italic">"Very Useful Platform for gaining real experience from the experts."</p>
-              <div className="flex items-center gap-md mt-auto pt-4 border-t border-outline-variant">
-                <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-h3">R</div>
-                <div>
-                  <h4 className="font-label-md text-label-md text-on-surface">Roushan Kumar Mourya</h4>
-                  <span className="font-caption text-caption text-on-surface-variant">Noida</span>
-                </div>
-              </div>
-            </div>
-            <div className="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col gap-md">
-              <div className="flex items-center gap-xs text-tertiary-container">
-                {[1,2,3,4,5].map(i => <Starey key={i} />)}
-              </div>
-              <p className="font-body-md text-body-md text-on-surface italic">"It is very useful for my Compliant Paddy Project at ITC Limited. I have connected to the Abhishek Sir and his guidance helps me a lot."</p>
-              <div className="flex items-center gap-md mt-auto pt-4 border-t border-outline-variant">
-                <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-h3">S</div>
-                <div>
-                  <h4 className="font-label-md text-label-md text-on-surface">Ganesh G</h4>
-                  <span className="font-caption text-caption text-on-surface-variant">Bhopal</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="w-full max-w-4xl mx-auto px-lg py-xl my-xl">
-        <div className="bg-secondary text-on-secondary rounded-[24px] p-xl flex flex-col md:flex-row items-center justify-between gap-lg shadow-lg relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-          <div className="flex flex-col gap-sm relative z-10 max-w-lg">
-            <h2 className="font-h2 text-h2">Are you an Agriculture Expert?</h2>
-            <p className="font-body-md text-body-md text-secondary-fixed-dim">Join our network to share your knowledge, help students or interns across India, and earn through specialized consultations.</p>
-          </div>
-          <Link to="/apply-expert" className="font-label-md text-label-md text-primary bg-secondary-fixed hover:bg-secondary-fixed-dim transition-colors px-6 py-3 rounded-lg whitespace-nowrap relative z-10 shadow-sm">
-            Apply as Expert
-          </Link>
         </div>
       </section>
     </main>
   );
 };
-
-const Starey = () => <Star className="w-5 h-5 fill-current text-tertiary-container" />;

@@ -56,7 +56,7 @@ export const submitExpertApplicationWithoutLogin = async (application, email, pa
 };
 // Expert Applications
 export const getAllExpertApplications = async () => {
-  const { data } = await supabase.from('experts').select('*');
+  const { data } = await supabase.from('experts').select('*').neq('status', 'deleted');
   return data || [];
 };
 
@@ -85,9 +85,33 @@ export const deleteExpertApplication = async (expertId) => {
 };
 
 export const updateExpertApplication = async (updatedExpert) => {
-  const { error } = await supabase.from('experts').update(updatedExpert).eq('id', updatedExpert.id);
+  const sanitized = {};
+  
+  if (updatedExpert.name !== undefined) sanitized.name = updatedExpert.name;
+  if (updatedExpert.specialization !== undefined) sanitized.specialization = updatedExpert.specialization;
+  if (updatedExpert.experience !== undefined) sanitized.experience = String(updatedExpert.experience);
+  if (updatedExpert.fee !== undefined) sanitized.fee = Number(updatedExpert.fee);
+  if (updatedExpert.description !== undefined) sanitized.description = updatedExpert.description;
+  if (updatedExpert.location !== undefined) sanitized.location = updatedExpert.location;
+  if (updatedExpert.languages !== undefined) sanitized.languages = updatedExpert.languages;
+  
+  if (updatedExpert.image_url !== undefined) sanitized.image_url = updatedExpert.image_url;
+  else if (updatedExpert.imageUrl !== undefined) sanitized.image_url = updatedExpert.imageUrl;
+  
+  const slots = updatedExpert.available_slots || updatedExpert.availableSlots;
+  if (slots !== undefined) {
+    sanitized.available_slots = slots;
+  }
+  
+  if (updatedExpert.status !== undefined) sanitized.status = updatedExpert.status;
+
+  const { error } = await supabase
+    .from('experts')
+    .update(sanitized)
+    .eq('id', updatedExpert.id);
+    
   if (error) {
-    console.error(error);
+    console.error("Supabase update error:", error);
     return false;
   }
   return true;
