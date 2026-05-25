@@ -158,6 +158,7 @@ export const FindExperts = () => {
         expertEmail,
         studentEmail: user.email,
         studentName: user.name,
+        studentId: user.id,
         date: bookingDetails.date,
         time: bookingDetails.time,
         notes: bookingDetails.notes || '',
@@ -166,10 +167,17 @@ export const FindExperts = () => {
         zoomLink
       };
       
-      await saveBooking(booking);
-      setBookingDetails(null);
-      toast.success('Consultation successfully booked!', { id: 'booking-flow' });
-      navigate('/dashboard');
+      try {
+        await saveBooking(booking);
+        setBookingDetails(null);
+        toast.success('Consultation successfully booked!', { id: 'booking-flow' });
+        navigate('/dashboard');
+      } catch (dbErr) {
+        console.error('>>> Database save failed:', dbErr);
+        toast.error('Payment succeeded but registering booking failed. Check dashboard or contact support.', { id: 'booking-flow' });
+        setBookingDetails(null);
+        navigate('/dashboard');
+      }
     }
   };
 

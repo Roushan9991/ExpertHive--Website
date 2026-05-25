@@ -228,6 +228,7 @@ export const ExpertProfile = () => {
         expertEmail,
         studentEmail: user.email,
         studentName: user.name,
+        studentId: user.id,
         date: bookingDetails.date,
         time: bookingDetails.time,
         notes: bookingDetails.notes || '',
@@ -236,11 +237,18 @@ export const ExpertProfile = () => {
         zoomLink
       };
       
-      await saveBooking(booking);
-      console.log('>>> Database save finished. Closing modal.');
-      setBookingDetails(null);
-      toast.success('Consultation successfully booked!', { id: 'booking-flow' });
-      navigate('/dashboard');
+      try {
+        await saveBooking(booking);
+        console.log('>>> Database save finished. Closing modal.');
+        setBookingDetails(null);
+        toast.success('Consultation successfully booked!', { id: 'booking-flow' });
+        navigate('/dashboard');
+      } catch (dbErr) {
+        console.error('>>> Database save failed:', dbErr);
+        toast.error('Payment succeeded but registering booking failed. Check dashboard or contact support.', { id: 'booking-flow' });
+        setBookingDetails(null);
+        navigate('/dashboard');
+      }
     } else {
       console.error('>>> MISSING DATA! bookingDetails or user is null!');
     }

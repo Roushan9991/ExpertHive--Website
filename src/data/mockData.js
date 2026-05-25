@@ -62,8 +62,22 @@ export const getAllExpertApplications = async () => {
 
 export const saveExpertApplication = async (application) => {
   // Convert application format to Supabase schema
+  let ownerId = application.ownerId;
+  if (!ownerId) {
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      ownerId = sessionRes.data.session?.user?.id;
+      if (!ownerId) {
+        const userRes = await supabase.auth.getUser();
+        ownerId = userRes.data?.user?.id;
+      }
+    } catch (e) {
+      console.warn('Session retrieval fallback during saveExpertApplication:', e);
+    }
+  }
+
   const expertData = {
-    owner_id: (await supabase.auth.getUser()).data.user?.id,
+    owner_id: ownerId,
     owner_email: application.expertEmail,
     name: application.name,
     specialization: application.specialization,
@@ -199,11 +213,25 @@ export const loadBookings = async () => {
 export const saveBooking = async (booking) => {
   // If the expertId is a mock ID (like "1" or "2"), it's not a valid UUID and will fail the database Foreign Key check.
   // We pass null for expert_id in this case so it still saves the booking.
-  const isMockExpert = booking.expertId.length < 10;
+  const isMockExpert = !booking.expertId || typeof booking.expertId !== 'string' || booking.expertId.length < 10;
   
+  let studentId = booking.studentId;
+  if (!studentId) {
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      studentId = sessionRes.data.session?.user?.id;
+      if (!studentId) {
+        const userRes = await supabase.auth.getUser();
+        studentId = userRes.data?.user?.id;
+      }
+    } catch (e) {
+      console.warn('Session retrieval fallback during saveBooking:', e);
+    }
+  }
+
   const payload = {
     expert_id: isMockExpert ? null : booking.expertId,
-    student_id: (await supabase.auth.getUser()).data.user?.id,
+    student_id: studentId,
     expert_name: booking.expertName,
     expert_email: booking.expertEmail,
     student_name: booking.studentName,
