@@ -12,7 +12,7 @@ export const Navbar = () => {
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   return (
-    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface shadow-sm docked full-width">
+    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
       <div className="flex items-center gap-gutter">
         <NavLink to="/" className="font-h2 text-h2 font-bold text-primary">ExpertHive</NavLink>
         <div className="hidden md:flex items-center gap-lg ml-xl">
@@ -31,7 +31,13 @@ export const Navbar = () => {
               `font-body-md text-body-md ${isActive ? 'text-primary font-bold border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'} transition-colors duration-200`
             }
           >
-            Find Experts
+            Explore Experts
+          </NavLink>
+          <NavLink
+            to="/apply-expert"
+            className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200"
+          >
+            Become an Expert
           </NavLink>
           {user && (
             <NavLink

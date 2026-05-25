@@ -11,6 +11,11 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const userRef = React.useRef(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const navigate = useNavigate();
 
@@ -96,7 +101,9 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async (authUser) => {
     try {
-      setLoading(true);
+      if (!userRef.current) {
+        setLoading(true);
+      }
 
       const { data: profile, error } = await supabase
         .from('profiles')
